@@ -1,0 +1,58 @@
+{
+  "expo": {
+    "name": "Eat Your Way",
+    "slug": "eat-your-way",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "eatyourway",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0a0518",
+    "splash": {
+      "backgroundColor": "#0a0518",
+      "resizeMode": "contain"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.eatyourway.game",
+      "buildNumber": "1",
+      "infoPlist": {
+        "UIBackgroundModes": [],
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "app.eatyourway.game",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#1a0b2e"
+      },
+      "permissions": []
+    },
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "buildToolsVersion": "35.0.0"
+          },
+          "ios": {
+            "deploymentTarget": "15.1"
+          }
+        }
+      ]
+    ],
+    "extra": {
+      "supabaseUrl": "",
+      "supabaseAnonKey": "",
+      "eas": {
+        "projectId": "c071aaab-48e6-4b76-8a0d-b984c97e402b"
+      }
+    },
+    "owner": "upliftdigital"
+  }
+}
