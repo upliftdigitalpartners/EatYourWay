@@ -1,17 +1,23 @@
 {
-  "name": "eat-your-way",
+  "name": "curbside",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
-  "description": "A vibrant food-crawl exploration game across NYC's most delicious neighborhoods.",
+  "description": "An open-world food crawl across New York City. Drive it, sail it, fly it — just don't food-coma.",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "worldgen": "node tools/worldgen/index.mjs"
   },
   "devDependencies": {
+    "@types/three": "^0.185.4",
     "typescript": "^5.5.4",
     "vite": "^5.4.10"
+  },
+  "dependencies": {
+    "@dimforge/rapier3d-compat": "^0.20.0",
+    "three": "^0.185.1"
   }
 }

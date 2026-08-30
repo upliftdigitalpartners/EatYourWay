@@ -1,118 +1,135 @@
+/** Keyboard and touch input, normalised into the ControlInput the vehicle
+ *  controllers expect. What A/D and Space mean depends on what you are
+ *  driving, so the mapping is resolved per domain. */
+
+import type { ControlInput } from './vehicles/controller';
+import type { Domain } from './vehicles/specs';
+
 export interface InputState {
-  keys: Record<string, boolean>;
-  /** Virtual joystick output, normalized to [-1, 1]. */
-  joy: { x: number; y: number };
-  /** True if eat button was pressed this frame (consumed on read). */
-  eatPressed: boolean;
+  keys: Set<string>;
+  /** Virtual stick, -1..1 each axis. */
+  stick: { x: number; y: number };
+  pressed: Set<string>;
 }
 
 export function createInput(): InputState {
-  return { keys: {}, joy: { x: 0, y: 0 }, eatPressed: false };
+  return { keys: new Set(), stick: { x: 0, y: 0 }, pressed: new Set() };
 }
 
-export function bindKeyboard(input: InputState, onEsc: () => void): () => void {
-  const onDown = (e: KeyboardEvent) => {
-    const k = e.key.toLowerCase();
-    input.keys[k] = true;
-    if (k === 'escape') onEsc();
-    if (k === 'e' || k === ' ') input.eatPressed = true;
-    // Prevent arrow keys from scrolling
-    if (['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k)) e.preventDefault();
-  };
-  const onUp = (e: KeyboardEvent) => { input.keys[e.key.toLowerCase()] = false; };
-  window.addEventListener('keydown', onDown, { passive: false });
-  window.addEventListener('keyup', onUp);
-  return () => {
-    window.removeEventListener('keydown', onDown);
-    window.removeEventListener('keyup', onUp);
-  };
+const TRACKED = new Set([
+  'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyQ', 'KeyE', 'KeyF', 'KeyC', 'KeyM',
+  'Space', 'ShiftLeft', 'ShiftRight', 'ControlLeft',
+  'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Escape',
+]);
+
+export function bindKeyboard(input: InputState): void {
+  addEventListener('keydown', (e) => {
+    if (!TRACKED.has(e.code)) return;
+    if (e.code === 'Space' || e.code.startsWith('Arrow')) e.preventDefault();
+    if (!input.keys.has(e.code)) input.pressed.add(e.code);
+    input.keys.add(e.code);
+  });
+  addEventListener('keyup', (e) => {
+    input.keys.delete(e.code);
+  });
+  addEventListener('blur', () => input.keys.clear());
 }
 
-export function readMovement(input: InputState): { vx: number; vy: number } {
-  let vx = 0, vy = 0;
-  const k = input.keys;
-  if (k.w || k.arrowup) vy -= 1;
-  if (k.s || k.arrowdown) vy += 1;
-  if (k.a || k.arrowleft) vx -= 1;
-  if (k.d || k.arrowright) vx += 1;
-  // Joystick overrides if active
-  if (Math.abs(input.joy.x) > 0.05 || Math.abs(input.joy.y) > 0.05) {
-    vx = input.joy.x;
-    vy = input.joy.y;
-  }
-  return { vx, vy };
+/** True once per physical press. */
+export function consumePress(input: InputState, code: string): boolean {
+  if (!input.pressed.has(code)) return false;
+  input.pressed.delete(code);
+  return true;
 }
 
-/** Wires up a virtual joystick element + eat button. Returns a teardown fn. */
-export function bindTouchControls(
-  input: InputState,
-  joystickEl: HTMLElement,
-  eatButtonEl: HTMLElement,
-): () => void {
-  const knob = joystickEl.querySelector<HTMLElement>('.knob');
-  if (!knob) throw new Error('joystick missing .knob');
-  const radius = 50;
-  let activeId: number | null = null;
-  let originX = 0, originY = 0;
-
-  const setKnob = (dx: number, dy: number) => {
-    const len = Math.hypot(dx, dy);
-    const cap = Math.min(1, len / radius);
-    const nx = len > 0 ? (dx / len) * cap : 0;
-    const ny = len > 0 ? (dy / len) * cap : 0;
-    knob.style.transform = `translate(${nx * radius}px, ${ny * radius}px)`;
-    input.joy.x = nx;
-    input.joy.y = ny;
-  };
-
-  const onStart = (e: TouchEvent) => {
-    const touch = e.changedTouches[0];
-    if (!touch || activeId !== null) return;
-    activeId = touch.identifier;
-    const rect = joystickEl.getBoundingClientRect();
-    originX = rect.left + rect.width / 2;
-    originY = rect.top + rect.height / 2;
-    setKnob(touch.clientX - originX, touch.clientY - originY);
-    e.preventDefault();
-  };
-  const onMove = (e: TouchEvent) => {
-    for (const t of Array.from(e.changedTouches)) {
-      if (t.identifier === activeId) {
-        setKnob(t.clientX - originX, t.clientY - originY);
-        e.preventDefault();
-      }
-    }
-  };
-  const onEnd = (e: TouchEvent) => {
-    for (const t of Array.from(e.changedTouches)) {
-      if (t.identifier === activeId) {
-        activeId = null;
-        setKnob(0, 0);
-      }
-    }
-  };
-
-  joystickEl.addEventListener('touchstart', onStart, { passive: false });
-  window.addEventListener('touchmove', onMove, { passive: false });
-  window.addEventListener('touchend', onEnd);
-  window.addEventListener('touchcancel', onEnd);
-
-  const onEat = (e: Event) => { input.eatPressed = true; e.preventDefault(); };
-  eatButtonEl.addEventListener('click', onEat);
-  eatButtonEl.addEventListener('touchstart', onEat, { passive: false });
-
-  return () => {
-    joystickEl.removeEventListener('touchstart', onStart);
-    window.removeEventListener('touchmove', onMove);
-    window.removeEventListener('touchend', onEnd);
-    window.removeEventListener('touchcancel', onEnd);
-    eatButtonEl.removeEventListener('click', onEat);
-    eatButtonEl.removeEventListener('touchstart', onEat);
-  };
+export function clearPresses(input: InputState): void {
+  input.pressed.clear();
 }
 
-export function consumeEatPress(input: InputState): boolean {
-  const v = input.eatPressed;
-  input.eatPressed = false;
+const axis = (input: InputState, neg: string[], pos: string[]): number => {
+  let v = 0;
+  if (neg.some(k => input.keys.has(k))) v -= 1;
+  if (pos.some(k => input.keys.has(k))) v += 1;
   return v;
+};
+
+export function readControls(input: InputState, domain: Domain, drive: string): ControlInput {
+  const throttle = axis(input, ['KeyS'], ['KeyW']) + (Math.abs(input.stick.y) > 0.08 ? input.stick.y : 0);
+  const lateral = axis(input, ['KeyA'], ['KeyD']) + (Math.abs(input.stick.x) > 0.08 ? input.stick.x : 0);
+  const brakeKey = input.keys.has('Space') ? 1 : 0;
+  const clamp = (v: number) => Math.max(-1, Math.min(1, v));
+
+  if (domain === 'air') {
+    const pitch = axis(input, ['ArrowUp'], ['ArrowDown']);
+    const yaw = axis(input, ['KeyQ'], ['KeyE']) + axis(input, ['ArrowLeft'], ['ArrowRight']);
+    if (drive === 'heli') {
+      // Space climbs, Shift descends; the stick tilts the airframe.
+      const lift = (input.keys.has('Space') ? 1 : 0)
+        - (input.keys.has('ShiftLeft') || input.keys.has('ShiftRight') ? 1 : 0);
+      return {
+        throttle: 0,
+        steer: 0,
+        brake: 0,
+        pitch: clamp(pitch - throttle),
+        roll: clamp(lateral),
+        yaw: clamp(yaw),
+        lift: clamp(lift),
+      };
+    }
+    return {
+      throttle: clamp(throttle >= 0 ? throttle : 0),
+      steer: clamp(lateral),
+      brake: brakeKey,
+      pitch: clamp(pitch),
+      roll: clamp(lateral),
+      yaw: clamp(yaw),
+      lift: 0,
+    };
+  }
+
+  return {
+    throttle: clamp(throttle),
+    steer: clamp(lateral),
+    brake: brakeKey,
+    pitch: 0, roll: 0, yaw: 0, lift: 0,
+  };
+}
+
+/** On-screen stick for touch devices. */
+export function bindTouchStick(input: InputState, pad: HTMLElement): void {
+  let id: number | null = null;
+  let cx = 0, cy = 0;
+  const radius = 54;
+  const knob = pad.querySelector<HTMLElement>('.knob');
+
+  const setKnob = (x: number, y: number) => {
+    if (knob) knob.style.transform = `translate(${x * radius}px, ${y * radius}px)`;
+  };
+
+  pad.addEventListener('pointerdown', (e) => {
+    id = e.pointerId;
+    const r = pad.getBoundingClientRect();
+    cx = r.left + r.width / 2;
+    cy = r.top + r.height / 2;
+    pad.setPointerCapture(e.pointerId);
+  });
+  pad.addEventListener('pointermove', (e) => {
+    if (e.pointerId !== id) return;
+    const dx = (e.clientX - cx) / radius;
+    const dy = (e.clientY - cy) / radius;
+    const m = Math.hypot(dx, dy) || 1;
+    const s = m > 1 ? 1 / m : 1;
+    input.stick.x = dx * s;
+    input.stick.y = -dy * s;
+    setKnob(dx * s, dy * s);
+  });
+  const end = (e: PointerEvent) => {
+    if (e.pointerId !== id) return;
+    id = null;
+    input.stick.x = 0;
+    input.stick.y = 0;
+    setKnob(0, 0);
+  };
+  pad.addEventListener('pointerup', end);
+  pad.addEventListener('pointercancel', end);
 }
