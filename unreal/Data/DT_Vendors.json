@@ -1,0 +1,1312 @@
+[
+  {
+    "Name": "jacksondiner",
+    "VendorId": "jacksondiner",
+    "DisplayName": "Jackson Diner",
+    "Blurb": "North Indian · 74th St",
+    "Emoji": "🍛",
+    "Cuisine": "Indian",
+    "District": "Jackson Heights",
+    "Color": {
+      "R": 1,
+      "G": 0.194618,
+      "B": 0.046665,
+      "A": 1
+    },
+    "LocationXMeters": 478.8,
+    "LocationYMeters": -119.3,
+    "bHidden": false,
+    "OpenAt": [
+      "Afternoon",
+      "Evening"
+    ],
+    "Items": [
+      {
+        "Name": "Chicken Biryani",
+        "Emoji": "🍚",
+        "Price": 14,
+        "Hunger": 60,
+        "Coma": 35,
+        "Flavor": 18,
+        "bGem": false
+      },
+      {
+        "Name": "Garlic Naan",
+        "Emoji": "🫓",
+        "Price": 4,
+        "Hunger": 18,
+        "Coma": 8,
+        "Flavor": 6,
+        "bGem": false
+      },
+      {
+        "Name": "Mango Lassi",
+        "Emoji": "🥭",
+        "Price": 5,
+        "Hunger": 8,
+        "Coma": 5,
+        "Flavor": 7,
+        "bGem": false
+      }
+    ]
+  },
+  {
+    "Name": "maharaja",
+    "VendorId": "maharaja",
+    "DisplayName": "Maharaja Sweets",
+    "Blurb": "Mithai & Chaat · 73rd",
+    "Emoji": "🍮",
+    "Cuisine": "Indian",
+    "District": "Jackson Heights",
+    "Color": {
+      "R": 1,
+      "G": 0.64448,
+      "B": 0.049707,
+      "A": 1
+    },
+    "LocationXMeters": 603.8,
+    "LocationYMeters": -215,
+    "bHidden": false,
+    "OpenAt": [
+      "Afternoon",
+      "Evening"
+    ],
+    "Items": [
+      {
+        "Name": "Pani Puri (6pc)",
+        "Emoji": "🥟",
+        "Price": 6,
+        "Hunger": 14,
+        "Coma": 6,
+        "Flavor": 14,
+        "bGem": false
+      },
+      {
+        "Name": "Gulab Jamun",
+        "Emoji": "🍡",
+        "Price": 3,
+        "Hunger": 6,
+        "Coma": 12,
+        "Flavor": 9,
+        "bGem": false
+      },
+      {
+        "Name": "Masala Chai",
+        "Emoji": "☕",
+        "Price": 2,
+        "Hunger": 3,
+        "Coma": 2,
+        "Flavor": 5,
+        "bGem": false
+      }
+    ]
+  },
+  {
+    "Name": "paanstall",
+    "VendorId": "paanstall",
+    "DisplayName": "Paan Singh",
+    "Blurb": "Hidden paan stall",
+    "Emoji": "🍃",
+    "Cuisine": "Indian",
+    "District": "Jackson Heights",
+    "Color": {
+      "R": 0.201556,
+      "G": 0.921582,
+      "B": 0.201556,
+      "A": 1
+    },
+    "LocationXMeters": 713.1,
+    "LocationYMeters": -310.7,
+    "bHidden": true,
+    "OpenAt": [
+      "Evening",
+      "LateNight"
+    ],
+    "Items": [
+      {
+        "Name": "Sweet Paan",
+        "Emoji": "🍃",
+        "Price": 3,
+        "Hunger": 4,
+        "Coma": 3,
+        "Flavor": 22,
+        "bGem": true
+      },
+      {
+        "Name": "Mukhwas",
+        "Emoji": "🌰",
+        "Price": 2,
+        "Hunger": 2,
+        "Coma": 1,
+        "Flavor": 8,
+        "bGem": false
+      }
+    ]
+  },
+  {
+    "Name": "lhasakitchen",
+    "VendorId": "lhasakitchen",
+    "DisplayName": "Lhasa Fast Food",
+    "Blurb": "Tibetan · Diversity Plaza",
+    "Emoji": "🥟",
+    "Cuisine": "Tibetan",
+    "District": "Jackson Heights",
+    "Color": {
+      "R": 0.024158,
+      "G": 0.658375,
+      "B": 0.693872,
+      "A": 1
+    },
+    "LocationXMeters": 916.3,
+    "LocationYMeters": -146.7,
+    "bHidden": false,
+    "OpenAt": [
+      "Afternoon",
+      "Evening"
+    ],
+    "Items": [
+      {
+        "Name": "Beef Momos (8pc)",
+        "Emoji": "🥟",
+        "Price": 8,
+        "Hunger": 32,
+        "Coma": 14,
+        "Flavor": 18,
+        "bGem": false
+      },
+      {
+        "Name": "Thukpa Noodles",
+        "Emoji": "🍜",
+        "Price": 9,
+        "Hunger": 38,
+        "Coma": 16,
+        "Flavor": 16,
+        "bGem": false
+      },
+      {
+        "Name": "Butter Tea",
+        "Emoji": "🍵",
+        "Price": 3,
+        "Hunger": 4,
+        "Coma": 3,
+        "Flavor": 8,
+        "bGem": false
+      }
+    ]
+  },
+  {
+    "Name": "nepalibhanchha",
+    "VendorId": "nepalibhanchha",
+    "DisplayName": "Nepali Bhanchha Ghar",
+    "Blurb": "Newari Thali",
+    "Emoji": "🍱",
+    "Cuisine": "Nepali",
+    "District": "Jackson Heights",
+    "Color": {
+      "R": 1,
+      "G": 0.046665,
+      "B": 0.258183,
+      "A": 1
+    },
+    "LocationXMeters": 1010,
+    "LocationYMeters": -37.3,
+    "bHidden": false,
+    "OpenAt": [
+      "Evening"
+    ],
+    "Items": [
+      {
+        "Name": "Choila Set",
+        "Emoji": "🍖",
+        "Price": 12,
+        "Hunger": 42,
+        "Coma": 22,
+        "Flavor": 19,
+        "bGem": false
+      },
+      {
+        "Name": "Sel Roti",
+        "Emoji": "🍩",
+        "Price": 4,
+        "Hunger": 14,
+        "Coma": 9,
+        "Flavor": 10,
+        "bGem": false
+      }
+    ]
+  },
+  {
+    "Name": "bangladeshi",
+    "VendorId": "bangladeshi",
+    "DisplayName": "Sagar Restaurant",
+    "Blurb": "Bangladeshi · Steam-table",
+    "Emoji": "🐟",
+    "Cuisine": "Bangladeshi",
+    "District": "Jackson Heights",
+    "Color": {
+      "R": 0.201556,
+      "G": 0.921582,
+      "B": 0.201556,
+      "A": 1
+    },
+    "LocationXMeters": 541.3,
+    "LocationYMeters": 44.7,
+    "bHidden": false,
+    "OpenAt": [
+      "Afternoon",
+      "Evening"
+    ],
+    "Items": [
+      {
+        "Name": "Fish Bhuna + Rice",
+        "Emoji": "🐟",
+        "Price": 11,
+        "Hunger": 38,
+        "Coma": 18,
+        "Flavor": 17,
+        "bGem": false
+      },
+      {
+        "Name": "Beef Tehari",
+        "Emoji": "🍛",
+        "Price": 10,
+        "Hunger": 36,
+        "Coma": 20,
+        "Flavor": 15,
+        "bGem": false
+      },
+      {
+        "Name": "Chai",
+        "Emoji": "☕",
+        "Price": 2,
+        "Hunger": 3,
+        "Coma": 2,
+        "Flavor": 5,
+        "bGem": false
+      }
+    ]
+  },
+  {
+    "Name": "tamalecart",
+    "VendorId": "tamalecart",
+    "DisplayName": "Doña Maria",
+    "Blurb": "Tamale Cart · Street",
+    "Emoji": "🫔",
+    "Cuisine": "Mexican",
+    "District": "Jackson Heights",
+    "Color": {
+      "R": 1,
+      "G": 0.194618,
+      "B": 0.046665,
+      "A": 1
+    },
+    "LocationXMeters": 1197.5,
+    "LocationYMeters": 72,
+    "bHidden": false,
+    "OpenAt": [
+      "Afternoon",
+      "Evening",
+      "LateNight"
+    ],
+    "Items": [
+      {
+        "Name": "Tamale Verde",
+        "Emoji": "🫔",
+        "Price": 3,
+        "Hunger": 22,
+        "Coma": 10,
+        "Flavor": 14,
+        "bGem": false
+      },
+      {
+        "Name": "Atole Champurrado",
+        "Emoji": "🍫",
+        "Price": 3,
+        "Hunger": 8,
+        "Coma": 5,
+        "Flavor": 9,
+        "bGem": false
+      },
+      {
+        "Name": "Tamale Dulce",
+        "Emoji": "🍠",
+        "Price": 3,
+        "Hunger": 18,
+        "Coma": 12,
+        "Flavor": 11,
+        "bGem": false
+      }
+    ]
+  },
+  {
+    "Name": "birriacart",
+    "VendorId": "birriacart",
+    "DisplayName": "Birria Bros",
+    "Blurb": "Tent · Roosevelt Ave",
+    "Emoji": "🌮",
+    "Cuisine": "Mexican",
+    "District": "Jackson Heights",
+    "Color": {
+      "R": 1,
+      "G": 0.046665,
+      "B": 0.258183,
+      "A": 1
+    },
+    "LocationXMeters": 1322.5,
+    "LocationYMeters": 17.3,
+    "bHidden": false,
+    "OpenAt": [
+      "Evening",
+      "LateNight"
+    ],
+    "Items": [
+      {
+        "Name": "Quesabirria (3pc)",
+        "Emoji": "🌮",
+        "Price": 12,
+        "Hunger": 40,
+        "Coma": 24,
+        "Flavor": 22,
+        "bGem": false
+      },
+      {
+        "Name": "Consomé Cup",
+        "Emoji": "🍲",
+        "Price": 4,
+        "Hunger": 12,
+        "Coma": 6,
+        "Flavor": 11,
+        "bGem": false
+      }
+    ]
+  },
+  {
+    "Name": "arepalady",
+    "VendorId": "arepalady",
+    "DisplayName": "Arepa Lady",
+    "Blurb": "Colombian · 79th St",
+    "Emoji": "🌽",
+    "Cuisine": "Colombian",
+    "District": "Jackson Heights",
+    "Color": {
+      "R": 1,
+      "G": 0.64448,
+      "B": 0.049707,
+      "A": 1
+    },
+    "LocationXMeters": 1510,
+    "LocationYMeters": -105.7,
+    "bHidden": false,
+    "OpenAt": [
+      "Evening",
+      "LateNight"
+    ],
+    "Items": [
+      {
+        "Name": "Arepa de Choclo",
+        "Emoji": "🌽",
+        "Price": 7,
+        "Hunger": 28,
+        "Coma": 14,
+        "Flavor": 19,
+        "bGem": false
+      },
+      {
+        "Name": "Arepa Queso",
+        "Emoji": "🧀",
+        "Price": 6,
+        "Hunger": 22,
+        "Coma": 12,
+        "Flavor": 14,
+        "bGem": false
+      },
+      {
+        "Name": "Chicha Morada",
+        "Emoji": "🍷",
+        "Price": 4,
+        "Hunger": 6,
+        "Coma": 3,
+        "Flavor": 9,
+        "bGem": false
+      }
+    ]
+  },
+  {
+    "Name": "pollosmario",
+    "VendorId": "pollosmario",
+    "DisplayName": "Pollos Mario",
+    "Blurb": "Peruvian · Rotisserie",
+    "Emoji": "🍗",
+    "Cuisine": "Peruvian",
+    "District": "Jackson Heights",
+    "Color": {
+      "R": 1,
+      "G": 0.194618,
+      "B": 0.046665,
+      "A": 1
+    },
+    "LocationXMeters": 1619.4,
+    "LocationYMeters": 17.3,
+    "bHidden": false,
+    "OpenAt": [
+      "Afternoon",
+      "Evening"
+    ],
+    "Items": [
+      {
+        "Name": "1/4 Pollo a la Brasa",
+        "Emoji": "🍗",
+        "Price": 11,
+        "Hunger": 44,
+        "Coma": 22,
+        "Flavor": 17,
+        "bGem": false
+      },
+      {
+        "Name": "Yuca Frita",
+        "Emoji": "🍟",
+        "Price": 5,
+        "Hunger": 16,
+        "Coma": 10,
+        "Flavor": 9,
+        "bGem": false
+      },
+      {
+        "Name": "Inca Kola",
+        "Emoji": "🥤",
+        "Price": 3,
+        "Hunger": 4,
+        "Coma": 4,
+        "Flavor": 6,
+        "bGem": false
+      }
+    ]
+  },
+  {
+    "Name": "basementmomo",
+    "VendorId": "basementmomo",
+    "DisplayName": "Basement Jhol",
+    "Blurb": "Hidden basement momo joint",
+    "Emoji": "✨",
+    "Cuisine": "Nepali",
+    "District": "Jackson Heights",
+    "Color": {
+      "R": 0.201556,
+      "G": 0.921582,
+      "B": 0.201556,
+      "A": 1
+    },
+    "LocationXMeters": 1088.1,
+    "LocationYMeters": 208.7,
+    "bHidden": true,
+    "OpenAt": [
+      "LateNight"
+    ],
+    "Items": [
+      {
+        "Name": "Jhol Momo",
+        "Emoji": "🥟",
+        "Price": 9,
+        "Hunger": 30,
+        "Coma": 14,
+        "Flavor": 26,
+        "bGem": true
+      },
+      {
+        "Name": "Sukuti",
+        "Emoji": "🥩",
+        "Price": 7,
+        "Hunger": 18,
+        "Coma": 12,
+        "Flavor": 18,
+        "bGem": true
+      }
+    ]
+  },
+  {
+    "Name": "newworldmall",
+    "VendorId": "newworldmall",
+    "DisplayName": "New World Mall",
+    "Blurb": "Food court · Roosevelt",
+    "Emoji": "🥡",
+    "Cuisine": "Chinese",
+    "District": "Flushing",
+    "Color": {
+      "R": 1,
+      "G": 0.046665,
+      "B": 0.258183,
+      "A": 1
+    },
+    "LocationXMeters": 4476.7,
+    "LocationYMeters": -145,
+    "bHidden": false,
+    "OpenAt": [
+      "Afternoon",
+      "Evening"
+    ],
+    "Items": [
+      {
+        "Name": "Cantonese Roast Duck",
+        "Emoji": "🦆",
+        "Price": 14,
+        "Hunger": 44,
+        "Coma": 24,
+        "Flavor": 20,
+        "bGem": false
+      },
+      {
+        "Name": "Wonton Noodle Soup",
+        "Emoji": "🍜",
+        "Price": 9,
+        "Hunger": 32,
+        "Coma": 14,
+        "Flavor": 15,
+        "bGem": false
+      },
+      {
+        "Name": "Egg Tart",
+        "Emoji": "🥧",
+        "Price": 2,
+        "Hunger": 6,
+        "Coma": 8,
+        "Flavor": 8,
+        "bGem": false
+      }
+    ]
+  },
+  {
+    "Name": "sichuan",
+    "VendorId": "sichuan",
+    "DisplayName": "Chengdu Tianfu",
+    "Blurb": "Sichuan · 39th Ave",
+    "Emoji": "🌶️",
+    "Cuisine": "Sichuan",
+    "District": "Flushing",
+    "Color": {
+      "R": 1,
+      "G": 0.046665,
+      "B": 0.258183,
+      "A": 1
+    },
+    "LocationXMeters": 4693.3,
+    "LocationYMeters": -310,
+    "bHidden": false,
+    "OpenAt": [
+      "Afternoon",
+      "Evening"
+    ],
+    "Items": [
+      {
+        "Name": "Mapo Tofu",
+        "Emoji": "🌶️",
+        "Price": 12,
+        "Hunger": 36,
+        "Coma": 20,
+        "Flavor": 22,
+        "bGem": false
+      },
+      {
+        "Name": "Dan Dan Noodles",
+        "Emoji": "🍜",
+        "Price": 10,
+        "Hunger": 32,
+        "Coma": 16,
+        "Flavor": 18,
+        "bGem": false
+      },
+      {
+        "Name": "Wontons in Chili Oil",
+        "Emoji": "🥟",
+        "Price": 8,
+        "Hunger": 22,
+        "Coma": 10,
+        "Flavor": 16,
+        "bGem": false
+      }
+    ]
+  },
+  {
+    "Name": "xianfamous",
+    "VendorId": "xianfamous",
+    "DisplayName": "Xi'an Famous Foods",
+    "Blurb": "Hand-pulled · Golden Mall",
+    "Emoji": "🍜",
+    "Cuisine": "Chinese",
+    "District": "Flushing",
+    "Color": {
+      "R": 1,
+      "G": 0.64448,
+      "B": 0.049707,
+      "A": 1
+    },
+    "LocationXMeters": 4943.3,
+    "LocationYMeters": -190,
+    "bHidden": false,
+    "OpenAt": [
+      "Afternoon",
+      "Evening"
+    ],
+    "Items": [
+      {
+        "Name": "Spicy Cumin Lamb Noodle",
+        "Emoji": "🍜",
+        "Price": 12,
+        "Hunger": 40,
+        "Coma": 18,
+        "Flavor": 23,
+        "bGem": false
+      },
+      {
+        "Name": "Liang Pi (Cold Skin)",
+        "Emoji": "🥬",
+        "Price": 9,
+        "Hunger": 22,
+        "Coma": 8,
+        "Flavor": 17,
+        "bGem": false
+      },
+      {
+        "Name": "Pork \"Burger\" Roujiamo",
+        "Emoji": "🥪",
+        "Price": 6,
+        "Hunger": 24,
+        "Coma": 12,
+        "Flavor": 14,
+        "bGem": false
+      }
+    ]
+  },
+  {
+    "Name": "goldenmall",
+    "VendorId": "goldenmall",
+    "DisplayName": "Lan Zhou Hand-Pulled",
+    "Blurb": "Basement noodle counter",
+    "Emoji": "🥢",
+    "Cuisine": "Chinese",
+    "District": "Flushing",
+    "Color": {
+      "R": 0.201556,
+      "G": 0.921582,
+      "B": 0.201556,
+      "A": 1
+    },
+    "LocationXMeters": 5060,
+    "LocationYMeters": -325,
+    "bHidden": true,
+    "OpenAt": [
+      "Evening",
+      "LateNight"
+    ],
+    "Items": [
+      {
+        "Name": "Beef Hand-Pulled Noodle",
+        "Emoji": "🍜",
+        "Price": 9,
+        "Hunger": 38,
+        "Coma": 16,
+        "Flavor": 26,
+        "bGem": true
+      },
+      {
+        "Name": "Lamb Skewers (5pc)",
+        "Emoji": "🍢",
+        "Price": 6,
+        "Hunger": 18,
+        "Coma": 10,
+        "Flavor": 19,
+        "bGem": true
+      }
+    ]
+  },
+  {
+    "Name": "tinywonton",
+    "VendorId": "tinywonton",
+    "DisplayName": "White Bear",
+    "Blurb": "Wontons in chili · Tiny shop",
+    "Emoji": "🥟",
+    "Cuisine": "Sichuan",
+    "District": "Flushing",
+    "Color": {
+      "R": 1,
+      "G": 0.194618,
+      "B": 0.046665,
+      "A": 1
+    },
+    "LocationXMeters": 5260,
+    "LocationYMeters": -160,
+    "bHidden": false,
+    "OpenAt": [
+      "Afternoon",
+      "Evening"
+    ],
+    "Items": [
+      {
+        "Name": "#6 Wontons in Chili Oil",
+        "Emoji": "🥟",
+        "Price": 7,
+        "Hunger": 20,
+        "Coma": 8,
+        "Flavor": 24,
+        "bGem": true
+      },
+      {
+        "Name": "Pickled Cabbage",
+        "Emoji": "🥬",
+        "Price": 3,
+        "Hunger": 6,
+        "Coma": 2,
+        "Flavor": 9,
+        "bGem": false
+      }
+    ]
+  },
+  {
+    "Name": "taipeihotpot",
+    "VendorId": "taipeihotpot",
+    "DisplayName": "Taipei Hong",
+    "Blurb": "Beef Noodle · Prince St",
+    "Emoji": "🐮",
+    "Cuisine": "Taiwanese",
+    "District": "Flushing",
+    "Color": {
+      "R": 1,
+      "G": 0.046665,
+      "B": 0.258183,
+      "A": 1
+    },
+    "LocationXMeters": 5526.7,
+    "LocationYMeters": -145,
+    "bHidden": false,
+    "OpenAt": [
+      "Evening"
+    ],
+    "Items": [
+      {
+        "Name": "Beef Noodle Soup",
+        "Emoji": "🍜",
+        "Price": 13,
+        "Hunger": 42,
+        "Coma": 22,
+        "Flavor": 21,
+        "bGem": false
+      },
+      {
+        "Name": "Popcorn Chicken",
+        "Emoji": "🍗",
+        "Price": 7,
+        "Hunger": 18,
+        "Coma": 14,
+        "Flavor": 14,
+        "bGem": false
+      },
+      {
+        "Name": "Scallion Pancake",
+        "Emoji": "🥞",
+        "Price": 5,
+        "Hunger": 18,
+        "Coma": 8,
+        "Flavor": 12,
+        "bGem": false
+      }
+    ]
+  },
+  {
+    "Name": "kbbq",
+    "VendorId": "kbbq",
+    "DisplayName": "Kang Suh Express",
+    "Blurb": "Korean · Northern Blvd",
+    "Emoji": "🥩",
+    "Cuisine": "Korean",
+    "District": "Flushing",
+    "Color": {
+      "R": 1,
+      "G": 0.194618,
+      "B": 0.046665,
+      "A": 1
+    },
+    "LocationXMeters": 4593.3,
+    "LocationYMeters": 35,
+    "bHidden": false,
+    "OpenAt": [
+      "Evening",
+      "LateNight"
+    ],
+    "Items": [
+      {
+        "Name": "Bulgogi Bento",
+        "Emoji": "🥩",
+        "Price": 12,
+        "Hunger": 40,
+        "Coma": 22,
+        "Flavor": 19,
+        "bGem": false
+      },
+      {
+        "Name": "Soft Tofu Stew",
+        "Emoji": "🍲",
+        "Price": 11,
+        "Hunger": 36,
+        "Coma": 16,
+        "Flavor": 17,
+        "bGem": false
+      },
+      {
+        "Name": "Kimchi Pancake",
+        "Emoji": "🥞",
+        "Price": 8,
+        "Hunger": 22,
+        "Coma": 12,
+        "Flavor": 13,
+        "bGem": false
+      }
+    ]
+  },
+  {
+    "Name": "tonkatsu",
+    "VendorId": "tonkatsu",
+    "DisplayName": "Katsu-ya",
+    "Blurb": "Tonkatsu · Main St",
+    "Emoji": "🍱",
+    "Cuisine": "Japanese",
+    "District": "Flushing",
+    "Color": {
+      "R": 1,
+      "G": 0.64448,
+      "B": 0.049707,
+      "A": 1
+    },
+    "LocationXMeters": 4893.3,
+    "LocationYMeters": 50,
+    "bHidden": false,
+    "OpenAt": [
+      "Afternoon",
+      "Evening"
+    ],
+    "Items": [
+      {
+        "Name": "Tonkatsu Set",
+        "Emoji": "🍱",
+        "Price": 14,
+        "Hunger": 46,
+        "Coma": 26,
+        "Flavor": 19,
+        "bGem": false
+      },
+      {
+        "Name": "Onigiri (2pc)",
+        "Emoji": "🍙",
+        "Price": 5,
+        "Hunger": 14,
+        "Coma": 6,
+        "Flavor": 9,
+        "bGem": false
+      },
+      {
+        "Name": "Matcha Latte",
+        "Emoji": "🍵",
+        "Price": 4,
+        "Hunger": 4,
+        "Coma": 3,
+        "Flavor": 7,
+        "bGem": false
+      }
+    ]
+  },
+  {
+    "Name": "bobashop",
+    "VendorId": "bobashop",
+    "DisplayName": "Tea & Milk",
+    "Blurb": "Boba · Off Roosevelt",
+    "Emoji": "🧋",
+    "Cuisine": "Taiwanese",
+    "District": "Flushing",
+    "Color": {
+      "R": 0.024158,
+      "G": 0.658375,
+      "B": 0.693872,
+      "A": 1
+    },
+    "LocationXMeters": 5260,
+    "LocationYMeters": 80,
+    "bHidden": false,
+    "OpenAt": [
+      "Afternoon",
+      "Evening",
+      "LateNight"
+    ],
+    "Items": [
+      {
+        "Name": "Brown Sugar Boba",
+        "Emoji": "🧋",
+        "Price": 6,
+        "Hunger": 8,
+        "Coma": 12,
+        "Flavor": 14,
+        "bGem": false
+      },
+      {
+        "Name": "Taro Milk Tea",
+        "Emoji": "🥤",
+        "Price": 5,
+        "Hunger": 6,
+        "Coma": 8,
+        "Flavor": 11,
+        "bGem": false
+      },
+      {
+        "Name": "Mango Snow Ice",
+        "Emoji": "🍧",
+        "Price": 7,
+        "Hunger": 12,
+        "Coma": 10,
+        "Flavor": 13,
+        "bGem": false
+      }
+    ]
+  },
+  {
+    "Name": "malaysian",
+    "VendorId": "malaysian",
+    "DisplayName": "Curry Leaves",
+    "Blurb": "Malaysian · Prince",
+    "Emoji": "🍛",
+    "Cuisine": "Malaysian",
+    "District": "Flushing",
+    "Color": {
+      "R": 1,
+      "G": 0.194618,
+      "B": 0.046665,
+      "A": 1
+    },
+    "LocationXMeters": 5543.3,
+    "LocationYMeters": 50,
+    "bHidden": false,
+    "OpenAt": [
+      "Evening"
+    ],
+    "Items": [
+      {
+        "Name": "Roti Canai",
+        "Emoji": "🫓",
+        "Price": 6,
+        "Hunger": 18,
+        "Coma": 8,
+        "Flavor": 16,
+        "bGem": false
+      },
+      {
+        "Name": "Hainanese Chicken",
+        "Emoji": "🍗",
+        "Price": 12,
+        "Hunger": 38,
+        "Coma": 20,
+        "Flavor": 18,
+        "bGem": false
+      },
+      {
+        "Name": "Laksa",
+        "Emoji": "🍜",
+        "Price": 11,
+        "Hunger": 34,
+        "Coma": 18,
+        "Flavor": 21,
+        "bGem": false
+      }
+    ]
+  },
+  {
+    "Name": "hiddendim",
+    "VendorId": "hiddendim",
+    "DisplayName": "Tim Ho Express",
+    "Blurb": "Dim sum cart · Hidden alley",
+    "Emoji": "🥟",
+    "Cuisine": "Chinese",
+    "District": "Flushing",
+    "Color": {
+      "R": 0.201556,
+      "G": 0.921582,
+      "B": 0.201556,
+      "A": 1
+    },
+    "LocationXMeters": 4860,
+    "LocationYMeters": 260,
+    "bHidden": true,
+    "OpenAt": [
+      "Afternoon"
+    ],
+    "Items": [
+      {
+        "Name": "Char Siu Bao",
+        "Emoji": "🥟",
+        "Price": 5,
+        "Hunger": 16,
+        "Coma": 8,
+        "Flavor": 22,
+        "bGem": true
+      },
+      {
+        "Name": "Shumai (4pc)",
+        "Emoji": "🥟",
+        "Price": 6,
+        "Hunger": 18,
+        "Coma": 10,
+        "Flavor": 19,
+        "bGem": true
+      },
+      {
+        "Name": "Egg Custard Bun",
+        "Emoji": "🥮",
+        "Price": 4,
+        "Hunger": 12,
+        "Coma": 12,
+        "Flavor": 16,
+        "bGem": true
+      }
+    ]
+  },
+  {
+    "Name": "thaitemple",
+    "VendorId": "thaitemple",
+    "DisplayName": "Wat Buddharangsi Stall",
+    "Blurb": "Sunday-only Thai temple food",
+    "Emoji": "🍛",
+    "Cuisine": "Thai",
+    "District": "Flushing",
+    "Color": {
+      "R": 1,
+      "G": 0.046665,
+      "B": 0.258183,
+      "A": 1
+    },
+    "LocationXMeters": 5460,
+    "LocationYMeters": 245,
+    "bHidden": false,
+    "OpenAt": [
+      "Afternoon"
+    ],
+    "Items": [
+      {
+        "Name": "Khao Soi",
+        "Emoji": "🍜",
+        "Price": 10,
+        "Hunger": 36,
+        "Coma": 18,
+        "Flavor": 22,
+        "bGem": false
+      },
+      {
+        "Name": "Mango Sticky Rice",
+        "Emoji": "🥭",
+        "Price": 7,
+        "Hunger": 18,
+        "Coma": 14,
+        "Flavor": 17,
+        "bGem": false
+      }
+    ]
+  },
+  {
+    "Name": "lemonice",
+    "VendorId": "lemonice",
+    "DisplayName": "Lemon Ice King of Corona",
+    "Blurb": "Italian ices since 1944 · 108th St",
+    "Emoji": "🍧",
+    "Cuisine": "Italian",
+    "District": "Corona",
+    "Color": {
+      "R": 1,
+      "G": 0.791298,
+      "B": 0.152926,
+      "A": 1
+    },
+    "LocationXMeters": 2604,
+    "LocationYMeters": -84,
+    "bHidden": false,
+    "OpenAt": [
+      "Afternoon",
+      "Evening",
+      "LateNight"
+    ],
+    "Items": [
+      {
+        "Name": "Lemon Ice",
+        "Emoji": "🍋",
+        "Price": 4,
+        "Hunger": 8,
+        "Coma": 4,
+        "Flavor": 12,
+        "bGem": false
+      },
+      {
+        "Name": "Rainbow Ice",
+        "Emoji": "🌈",
+        "Price": 5,
+        "Hunger": 10,
+        "Coma": 6,
+        "Flavor": 11,
+        "bGem": false
+      },
+      {
+        "Name": "Peanut Butter Ice",
+        "Emoji": "🥜",
+        "Price": 5,
+        "Hunger": 14,
+        "Coma": 9,
+        "Flavor": 17,
+        "bGem": true
+      }
+    ]
+  },
+  {
+    "Name": "nixtamal",
+    "VendorId": "nixtamal",
+    "DisplayName": "Tortilleria Nixtamal",
+    "Blurb": "Masa ground on site · 104th St",
+    "Emoji": "🌮",
+    "Cuisine": "Mexican",
+    "District": "Corona",
+    "Color": {
+      "R": 1,
+      "G": 0.194618,
+      "B": 0.046665,
+      "A": 1
+    },
+    "LocationXMeters": 2382,
+    "LocationYMeters": 118,
+    "bHidden": false,
+    "OpenAt": [
+      "Afternoon",
+      "Evening"
+    ],
+    "Items": [
+      {
+        "Name": "Tacos al Pastor (3pc)",
+        "Emoji": "🌮",
+        "Price": 9,
+        "Hunger": 42,
+        "Coma": 22,
+        "Flavor": 19,
+        "bGem": false
+      },
+      {
+        "Name": "Masa Quesadilla",
+        "Emoji": "🫓",
+        "Price": 7,
+        "Hunger": 30,
+        "Coma": 16,
+        "Flavor": 14,
+        "bGem": false
+      },
+      {
+        "Name": "Horchata",
+        "Emoji": "🥛",
+        "Price": 4,
+        "Hunger": 8,
+        "Coma": 6,
+        "Flavor": 7,
+        "bGem": false
+      }
+    ]
+  },
+  {
+    "Name": "leos",
+    "VendorId": "leos",
+    "DisplayName": "Leo's Latticini",
+    "Blurb": "Mama's · fresh mozz, cash only",
+    "Emoji": "🧀",
+    "Cuisine": "Italian",
+    "District": "Corona",
+    "Color": {
+      "R": 0.904661,
+      "G": 0.361307,
+      "B": 0.119538,
+      "A": 1
+    },
+    "LocationXMeters": 2856,
+    "LocationYMeters": -262,
+    "bHidden": true,
+    "OpenAt": [
+      "Afternoon"
+    ],
+    "Items": [
+      {
+        "Name": "Hero Sandwich",
+        "Emoji": "🥖",
+        "Price": 13,
+        "Hunger": 58,
+        "Coma": 30,
+        "Flavor": 24,
+        "bGem": true
+      },
+      {
+        "Name": "Fresh Mozzarella",
+        "Emoji": "🧀",
+        "Price": 6,
+        "Hunger": 20,
+        "Coma": 10,
+        "Flavor": 13,
+        "bGem": false
+      },
+      {
+        "Name": "Rice Ball",
+        "Emoji": "🍙",
+        "Price": 4,
+        "Hunger": 24,
+        "Coma": 15,
+        "Flavor": 11,
+        "bGem": false
+      }
+    ]
+  },
+  {
+    "Name": "coronaplaza",
+    "VendorId": "coronaplaza",
+    "DisplayName": "Corona Plaza Elotes",
+    "Blurb": "Street cart cluster under the 7",
+    "Emoji": "🌽",
+    "Cuisine": "Mexican",
+    "District": "Corona",
+    "Color": {
+      "R": 1,
+      "G": 0.64448,
+      "B": 0.049707,
+      "A": 1
+    },
+    "LocationXMeters": 2498,
+    "LocationYMeters": -196,
+    "bHidden": false,
+    "OpenAt": [
+      "Evening",
+      "LateNight"
+    ],
+    "Items": [
+      {
+        "Name": "Elote",
+        "Emoji": "🌽",
+        "Price": 4,
+        "Hunger": 18,
+        "Coma": 8,
+        "Flavor": 12,
+        "bGem": false
+      },
+      {
+        "Name": "Esquites",
+        "Emoji": "🥣",
+        "Price": 5,
+        "Hunger": 22,
+        "Coma": 10,
+        "Flavor": 14,
+        "bGem": false
+      },
+      {
+        "Name": "Mangonada",
+        "Emoji": "🥭",
+        "Price": 6,
+        "Hunger": 12,
+        "Coma": 9,
+        "Flavor": 16,
+        "bGem": true
+      }
+    ]
+  }
+]
