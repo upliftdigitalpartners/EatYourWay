@@ -10,71 +10,74 @@ install available, so treat the first build as a real integration step, not a
 formality. The logic is a direct port of the web build (which *was* tested), but
 expect to fix include paths or API details for your exact engine version.
 
-What is included, and what you still have to make in the editor:
-
-| Included (text) | You create (editor) |
-| --- | --- |
-| All gameplay C++ | Blueprint subclasses of each pawn |
-| Vendor DataTable JSON | Input Actions + Mapping Contexts |
-| Vehicle spec JSON + generator script | Meshes for vehicles and stalls |
-| `Build.cs` dependency list | The level and Cesium georeference |
-| Cesium setup values | Order/HUD widgets |
+The default staging path below is deliberately minimal: it leaves out the one
+file that needs Chaos Vehicles and does not involve Cesium at all, so the first
+build has the smallest possible surface for something to go wrong.
 
 ---
 
-## 1. Rename the module macro
-
-Every class is exported with `CURBSIDE_API`. Change it to your module's
-uppercased name, or the build will not link:
+## 1. Stage the module
 
 ```bash
-# from the repo root — replace YOURMODULE with your actual module name
-grep -rl 'CURBSIDE_API' unreal/Source \
-  | xargs sed -i 's/CURBSIDE_API/YOURMODULE_API/g'
+./unreal/Tools/stage_module.sh <module-dir> <MODULENAME>
+
+# e.g. for a project whose module lives at Source/EatYourWay:
+./unreal/Tools/stage_module.sh ~/dev/eatyourway/Source/EatYourWay EatYourWay
 ```
 
-Then copy `unreal/Source/Curbside/Public/*` and `Private/*` into your module's
-corresponding folders. Do **not** copy `Curbside.Build.cs` — merge its
-dependency list into your own (step 2).
+This copies the sources into your module and rewrites the `CURBSIDE_API` export
+macro to match (`EATYOURWAY_API` in the example). Get that macro wrong and the
+code compiles but fails to link, so let the script do it.
 
-## 2. Build dependencies
-
-Add to your module's `Build.cs`:
+It prints the exact `Build.cs` and `.uproject` lines to add. For the minimal
+build that is:
 
 ```csharp
 PublicDependencyModuleNames.AddRange(new string[] {
-    "EnhancedInput",   // all pawns bind through it
-    "ChaosVehicles",   // ACurbsideWheeledVehicle
-    "PhysicsCore",     // aircraft and boat forces
+    "EnhancedInput",
+    "PhysicsCore",
 });
 ```
 
-And enable in your `.uproject`:
-
 ```json
-{ "Name": "ChaosVehiclesPlugin", "Enabled": true },
-{ "Name": "EnhancedInput",       "Enabled": true },
-{ "Name": "PythonScriptPlugin",  "Enabled": true }
+{ "Name": "PythonScriptPlugin", "Enabled": true }
 ```
 
-Regenerate project files and build.
+Then *Generate Project Files* and build from your IDE rather than Live Coding —
+you want full error output on a first integration.
 
-> Cesium is deliberately **not** a build dependency. No file here includes a
-> Cesium header — the georeference reaches the code as a plain `FTransform` on
-> the vendor spawner. The module compiles with or without the plugin.
+### What you get in the minimal build
 
-## 3. Import the vendors
+| Included | Left out |
+| --- | --- |
+| Crawl rules (`UCurbsideRunComponent`) | Chaos wheeled vehicles |
+| 27 vendors + spawner | Cesium / real-world map |
+| On-foot character, enter/exit | |
+| Helicopter and fixed-wing | |
+| Boats | |
+| 15 vehicle spec assets | |
+
+That is still a complete playable loop — walk to a vendor, order, fly to another
+district, order again, watch the run end. Enough to prove the port works.
+
+**Gate:** the editor opens and your classes appear under
+*Content Browser → C++ Classes*.
+
+## 2. Import the vendors
 
 1. Content Browser → **Import** → `unreal/Data/DT_Vendors.json`
 2. Pick **DataTable**, row struct **`CurbsideVendorRow`**
 3. You should get **27 rows / 74 menu items / 12 gems / 5 hidden**
 
+A row count other than 27 means the struct didn't match — fix that before
+moving on.
+
 Positions are **metres** east (`LocationXMeters`) and south
-(`LocationYMeters`) of the georeference origin. Unreal is centimetres —
+(`LocationYMeters`) of the georeference origin. Unreal is centimetres;
 `FCurbsideVendorRow::GetLocalOffset()` does the conversion, so never apply a
 scale factor yourself.
 
-## 4. Generate the vehicle specs
+## 3. Generate the vehicle specs
 
 With the module compiled and the Python plugin on:
 
@@ -91,7 +94,61 @@ updates in place. Source of truth is `unreal/Data/vehicle_specs.json`.
 | Water | jetski, speedboat, ferry |
 | Air | helicopter, cessna, jet |
 
-## 5. Cesium — real Queens
+The ground specs are generated even in the minimal build — they are just data,
+and they are waiting for you when you add Chaos.
+
+## 4. Blueprint wiring
+
+Create Blueprint subclasses and fill in the exposed slots:
+
+- `BP_Character` ← `ACurbsideCharacter` — mesh, `OnFootContext`, `MoveAction`,
+  `LookAction`, `JumpAction`, `SprintAction`, `InteractAction`
+- `BP_Helicopter`, `BP_Plane` ← `ACurbsideAircraftPawn` — `Hull` mesh,
+  `RotorMesh`, `Spec`, `FlightContext`, throttle/cyclic/yaw/lift/exit
+- `BP_Boat` ← `ACurbsideBoatPawn` — `Hull` mesh, `Spec`, `BoatContext`
+- Set `ACurbsidePlayerState` as your GameMode's Player State class
+
+Each vehicle's `OnRequestExit` event must call `ExitVehicle(self)` on the
+character that entered it, or you get in and never get out.
+
+### Input Actions to create
+
+`IA_Move`, `IA_Look` (Axis2D); `IA_Throttle`, `IA_Steer`, `IA_Yaw`, `IA_Lift`
+(Axis1D); `IA_Jump`, `IA_Sprint`, `IA_Brake`, `IA_Interact` (Digital). Then one
+Mapping Context per mode.
+
+| Input | On foot | Ground | Helicopter | Fixed-wing | Boat |
+| --- | --- | --- | --- | --- | --- |
+| `W`/`S` | walk | throttle | cyclic pitch | throttle | throttle |
+| `A`/`D` | strafe | steer | cyclic roll | roll | rudder |
+| `Space` | jump | brake | collective up | wheel brake | — |
+| `Shift` | sprint | — | collective down | — | — |
+| `Q`/`E` | — | — | tail rotor | rudder | — |
+| `F` | order / get in | get out | get out | get out | get out |
+
+## 5. Later: add Chaos wheeled vehicles
+
+Once the minimal build is green:
+
+```bash
+./unreal/Tools/stage_module.sh <module-dir> <MODULENAME> --with-chaos
+```
+
+Add `"ChaosVehicles"` to `PublicDependencyModuleNames` and enable
+`ChaosVehiclesPlugin`.
+
+> **Where errors will cluster.** `UChaosWheeledVehicleMovementComponent` has
+> moved headers between releases, and 5.7 ships the newer *Chaos Modular
+> Vehicles* alongside the classic system. This code targets classic Chaos
+> Vehicles. If `SetTargetGear` or `SetThrottleInput` won't resolve, check which
+> of the two your include is pulling in.
+
+Setting up the vehicle itself is the fiddliest part of the whole port — it needs
+a skeletal mesh with correctly named wheel bones, a physics asset, and wheel
+setups. Start from Epic's Vehicle template content and retarget rather than
+authoring from scratch. Get *one* car driving before making the other eight.
+
+## 6. Later: add Cesium for real Queens
 
 Install **Cesium for Unreal** from Fab (free, Apache 2.0), then:
 
@@ -105,13 +162,18 @@ Install **Cesium for Unreal** from Fab (free, Apache 2.0), then:
    | Origin Height | `0` |
 
 2. Add **Cesium World Terrain** and **Cesium OSM Buildings** tilesets.
-3. Place a `CurbsideVendorSpawner`, assign the vendor DataTable, and leave
-   `GeoreferenceOrigin` at identity — Cesium already makes that lat/lon the
-   level origin.
+3. Leave the vendor spawner's `GeoreferenceOrigin` at identity — Cesium already
+   makes that lat/lon the level origin.
 
-This puts all 27 vendors on the real streets they are named after. The world
-extends roughly 6.6 km east to Flushing and 3.2 km north to LaGuardia, which is
-the area the web build's procedural generator covers.
+This puts all 27 vendors on the real streets they are named after.
+
+**Nothing in this module includes a Cesium header.** The georeference reaches the
+code as a plain `FTransform`, so the module compiles with or without the plugin,
+and you can add or remove Cesium at any point without touching C++.
+
+**Android note.** Cesium for Unreal is arm64-only on Android. If your project
+currently packages with *Support armv7* enabled, adding Cesium will break that
+build — untick armv7 in *Project Settings → Platforms → Android*.
 
 **Licensing.** Cesium OSM Buildings is OpenStreetMap data under ODbL. Rendering
 it in a game is a *Produced Work* — attribution only, and your game keeps its
@@ -119,36 +181,10 @@ own licence. Credit OpenStreetMap contributors on a title or credits screen.
 Google Photorealistic 3D Tiles is a different matter: its terms forbid caching,
 rehosting or deriving geometry, so it is not viable as a shipped game world.
 
-## 6. Blueprint wiring
-
-Create Blueprint subclasses and fill in the exposed slots:
-
-- `BP_Character` ← `ACurbsideCharacter` — mesh, `OnFootContext`, `MoveAction`,
-  `LookAction`, `JumpAction`, `SprintAction`, `InteractAction`
-- `BP_Car` ← `ACurbsideWheeledVehicle` — skeletal mesh + wheel setup (standard
-  Chaos vehicle work), `Spec`, `DrivingContext`, throttle/steer/brake/exit
-- `BP_Helicopter`, `BP_Plane` ← `ACurbsideAircraftPawn` — `Hull` mesh,
-  `RotorMesh`, `Spec`, `FlightContext`, throttle/cyclic/yaw/lift/exit
-- `BP_Boat` ← `ACurbsideBoatPawn` — `Hull` mesh, `Spec`, `BoatContext`
-- Set `ACurbsidePlayerState` as your GameMode's Player State class
-
-Each vehicle's `OnRequestExit` event should call `ExitVehicle(self)` on the
-character that entered it.
-
-### Suggested bindings
-
-| Input | On foot | Ground vehicle | Helicopter | Fixed-wing | Boat |
-| --- | --- | --- | --- | --- | --- |
-| `W`/`S` | walk | throttle | cyclic pitch | throttle | throttle |
-| `A`/`D` | strafe | steer | cyclic roll | roll | rudder |
-| `Space` | jump | brake | collective up | wheel brake | — |
-| `Shift` | sprint | — | collective down | — | — |
-| `Q`/`E` | — | — | tail rotor | rudder | — |
-| `F` | order / get in | get out | get out | get out | get out |
-
 ## 7. How the rules work
 
-`UCurbsideRunComponent` (on the PlayerState) owns one crawl:
+`UCurbsideRunComponent` (on the PlayerState, so it survives pawn swaps) owns one
+crawl:
 
 - **$120** and **12 minutes**. Hunger drains, coma decays.
 - Three distinct cuisines → **×1.5** flavor.
@@ -164,10 +200,11 @@ Call `Order(Vendor.Row, Item, OutFlavor)` from your order widget; bind
 ## 8. Known gaps
 
 - **Not compiled.** See the status note above.
+- **No touch controls.** Input is keyboard-shaped. For Android you need
+  on-screen controls; `src/ui/` in the web build has a tested layout to
+  reference, though the code doesn't port.
 - **No AI traffic.** Vehicles are parked props until entered.
 - **No water volume.** Boats float against `Spec->WaterLevelZ`, a flat plane.
-  Cesium terrain has no water body, so set this per level.
 - **Enter/exit is teleport-based.** No animation.
-- **Fixed-wing needs real runways.** LaGuardia exists in the OSM data but you
-  will want a flat landing surface; `TakeoffRollMeters` gates rotation
+- **Fixed-wing needs a flat runway.** `TakeoffRollMeters` gates rotation
   (240 m for the light plane, 900 m for the jet).

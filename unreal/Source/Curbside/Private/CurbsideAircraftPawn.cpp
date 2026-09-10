@@ -170,7 +170,7 @@ void ACurbsideAircraftPawn::AutoLevel(float Strength)
     Hull->AddTorqueInRadians(Correction, NAME_None, /*bAccelChange=*/true);
 }
 
-void ACurbsideAircraftPawn::TickHelicopter(float DeltaSeconds)
+void ACurbsideAircraftPawn::TickHelicopter()
 {
     if (!Hull || !Spec)
     {
@@ -270,7 +270,7 @@ void ACurbsideAircraftPawn::Tick(float DeltaSeconds)
     {
         if (Spec->Drive == ECurbsideDrive::Helicopter)
         {
-            TickHelicopter(DeltaSeconds);
+            TickHelicopter();
         }
         else if (Spec->Drive == ECurbsideDrive::Plane)
         {

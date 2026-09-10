@@ -105,15 +105,12 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Curbside")
     void SpawnVendors();
 
-    UFUNCTION(BlueprintPure, Category = "Curbside")
-    const TArray<ACurbsideVendorActor*>& GetSpawned() const { return Spawned; }
+    const TArray<TObjectPtr<ACurbsideVendorActor>>& GetSpawned() const { return Spawned; }
 
 private:
+    /** Keeps the spawned vendors referenced so they are not garbage collected. */
     UPROPERTY()
-    TArray<TObjectPtr<ACurbsideVendorActor>> SpawnedStorage;
-
-    UPROPERTY()
-    TArray<ACurbsideVendorActor*> Spawned;
+    TArray<TObjectPtr<ACurbsideVendorActor>> Spawned;
 
     /** Cesium streams terrain in, so a ground trace at BeginPlay often misses.
      *  Retry the ones that failed until they land or we give up. */

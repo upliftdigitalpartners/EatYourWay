@@ -77,7 +77,6 @@ void ACurbsideVendorSpawner::SpawnVendors()
         return;
     }
 
-    SpawnedStorage.Reset();
     Spawned.Reset();
 
     static const FString Context(TEXT("CurbsideVendorSpawner"));
@@ -105,7 +104,6 @@ void ACurbsideVendorSpawner::SpawnVendors()
         }
 
         Vendor->InitialiseFromRow(*RowPtr);
-        SpawnedStorage.Add(Vendor);
         Spawned.Add(Vendor);
     }
 
@@ -123,9 +121,9 @@ void ACurbsideVendorSpawner::RetrySnapToGround()
     ++SnapAttempts;
     int32 Remaining = 0;
 
-    for (ACurbsideVendorActor* Vendor : Spawned)
+    for (const TObjectPtr<ACurbsideVendorActor>& Vendor : Spawned)
     {
-        if (!IsValid(Vendor))
+        if (!IsValid(Vendor.Get()))
         {
             continue;
         }
@@ -136,7 +134,7 @@ void ACurbsideVendorSpawner::RetrySnapToGround()
 
         FHitResult Hit;
         FCollisionQueryParams Params;
-        Params.AddIgnoredActor(Vendor);
+        Params.AddIgnoredActor(Vendor.Get());
         Params.AddIgnoredActor(this);
 
         if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_WorldStatic, Params))

@@ -102,7 +102,8 @@ protected:
     void HandleLift(const FInputActionValue& Value);
     void HandleExit(const FInputActionValue& Value);
 
-    void TickHelicopter(float DeltaSeconds);
+    /** Collective and cyclic. Frame-rate independent, so it needs no delta. */
+    void TickHelicopter();
     void TickFixedWing(float DeltaSeconds);
 
     /** Torque the airframe back toward level. */
