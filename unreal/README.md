@@ -3,12 +3,18 @@
 A drop-in C++ module that ports Curbside's gameplay to Unreal Engine 5.7:
 the crawl rules, 27 vendors, and driveable/flyable/sailable vehicles.
 
-## Status — read this first
+## Status
 
-**None of this C++ has been compiled.** It was written without an Unreal
-install available, so treat the first build as a real integration step, not a
-formality. The logic is a direct port of the web build (which *was* tested), but
-expect to fix include paths or API details for your exact engine version.
+**Compiles clean on UE 5.7 / macOS** (Apple silicon, Mac SDK 26.5), verified
+2026-09-14 against a project module created from the Third Person template.
+UnrealHeaderTool passes with `-WarningsAsErrors`. The minimal stage — everything
+except the Chaos wheeled vehicle — built and linked with no errors on the first
+attempt.
+
+Still unverified: **runtime behaviour**. Nothing here has been played yet. The
+handling numbers are ported from the web build, where they were tuned, but they
+have not been re-tuned against Chaos/UE physics and should be treated as
+starting points.
 
 The default staging path below is deliberately minimal: it leaves out the one
 file that needs Chaos Vehicles and does not involve Cesium at all, so the first
