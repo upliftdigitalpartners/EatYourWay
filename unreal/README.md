@@ -7,9 +7,9 @@ the crawl rules, 27 vendors, and driveable/flyable/sailable vehicles.
 
 **Compiles clean on UE 5.7 / macOS** (Apple silicon, Mac SDK 26.5), verified
 2026-09-14 against a project module created from the Third Person template.
-UnrealHeaderTool passes with `-WarningsAsErrors`. The minimal stage — everything
-except the Chaos wheeled vehicle — built and linked with no errors on the first
-attempt.
+UnrealHeaderTool passes with `-WarningsAsErrors`. **All 17 files build**,
+including the Chaos wheeled vehicle against 5.7's classic Chaos Vehicles — both
+the minimal stage and `--with-chaos` linked with no errors on the first attempt.
 
 Still unverified: **runtime behaviour**. Nothing here has been played yet. The
 handling numbers are ported from the web build, where they were tuned, but they
@@ -143,11 +143,11 @@ Once the minimal build is green:
 Add `"ChaosVehicles"` to `PublicDependencyModuleNames` and enable
 `ChaosVehiclesPlugin`.
 
-> **Where errors will cluster.** `UChaosWheeledVehicleMovementComponent` has
-> moved headers between releases, and 5.7 ships the newer *Chaos Modular
-> Vehicles* alongside the classic system. This code targets classic Chaos
-> Vehicles. If `SetTargetGear` or `SetThrottleInput` won't resolve, check which
-> of the two your include is pulling in.
+> **If it doesn't resolve.** `UChaosWheeledVehicleMovementComponent` has moved
+> headers between releases, and 5.7 ships the newer *Chaos Modular Vehicles*
+> alongside the classic system. This code targets classic Chaos Vehicles and
+> compiles against 5.7 as shipped. If `SetTargetGear` or `SetThrottleInput`
+> won't resolve on your version, check which of the two your include pulls in.
 
 Setting up the vehicle itself is the fiddliest part of the whole port — it needs
 a skeletal mesh with correctly named wheel bones, a physics asset, and wheel
