@@ -1,33 +1,35 @@
 """
 Curbside — build the city.
 
-Reads unreal/Data/world_instances.json and spawns it as Instanced Static Mesh
+Reads unreal/Data/world_instances.json and places it as Instanced Static Mesh
 components: 3,019 buildings, the road grid, the elevated 7 train, Flushing Bay,
 Flushing Meadows and the LaGuardia runways.
 
 Run inside the Unreal Editor:
     Tools > Execute Python Script...  ->  this file
 
-Safe to re-run: it deletes the actors it made last time before rebuilding.
+Safe to re-run: it replaces what the last run built rather than stacking on it.
+
+REQUIRES a rebuilt C++ module. Unreal's Python API cannot add a component to an
+actor — AddComponentByClass is not exposed — so the InstancedStaticMeshComponent
+has to come from C++. That is ACurbsideWorldChunk. Stage and build the module
+first; this script checks and tells you if it is missing.
 
 All the geometry was computed in Node by tools/export-unreal-world.mjs, where it
-could be verified. This script only places transforms, which keeps the part that
-cannot be tested from outside the editor as simple as possible.
-
-One instanced component per category means six draw calls for the whole city
-rather than four thousand actors.
+could be verified. This script only marshals transforms, which keeps the part
+that cannot be tested from outside the editor as small as possible.
 """
 
 import json
 import os
 import unreal
 
-SCRIPT_VERSION = "2026-09-23.1"
+SCRIPT_VERSION = "2026-09-23.3"
 
 CUBE_PATH = "/Game/LevelPrototyping/Meshes/SM_Cube"
 MATERIAL_PATH = "/Game/Curbside/Materials"
 
-# category -> (actor label, base colour, roughness)
+# category key -> (actor label, base colour, roughness)
 CATEGORIES = [
     ("buildings", "Curbside_Buildings", (0.42, 0.40, 0.37), 0.85),
     ("roads",     "Curbside_Roads",     (0.08, 0.08, 0.09), 0.92),
@@ -62,6 +64,80 @@ def load(path):
     return None
 
 
+# ---------------------------------------------------------------------------
+# unreal.Transform construction
+#
+# The Python bindings have changed how this struct is constructed more than
+# once, and there is no way to test it from outside the editor. So rather than
+# guess, build one transform every plausible way, keep the first that reads back
+# correctly, and log which one it was.
+# ---------------------------------------------------------------------------
+
+def _to_quat(rotator):
+    for attempt in (
+        lambda: rotator.quaternion(),
+        lambda: unreal.MathLibrary.conv_rotator_to_quaternion(rotator),
+    ):
+        try:
+            return attempt()
+        except Exception:
+            continue
+    return None
+
+
+def _by_keyword(loc, rot, scale):
+    return unreal.Transform(location=loc, rotation=rot, scale=scale)
+
+
+def _by_position(loc, rot, scale):
+    return unreal.Transform(loc, rot, scale)
+
+
+def _by_property(loc, rot, scale):
+    t = unreal.Transform()
+    t.set_editor_property("translation", loc)
+    t.set_editor_property("scale3d", scale)
+    quat = _to_quat(rot)
+    if quat is not None:
+        t.set_editor_property("rotation", quat)
+    return t
+
+
+def _reads_back(t, loc, scale):
+    """Did translation and scale actually land where we put them?"""
+    try:
+        got_loc = t.get_editor_property("translation")
+        got_scale = t.get_editor_property("scale3d")
+    except Exception:
+        return False
+    close = lambda a, b: abs(a - b) < 0.01
+    return (close(got_loc.x, loc.x) and close(got_loc.y, loc.y) and close(got_loc.z, loc.z)
+            and close(got_scale.x, scale.x) and close(got_scale.y, scale.y))
+
+
+def pick_transform_builder():
+    probe_loc = unreal.Vector(123.0, -456.0, 78.0)
+    probe_rot = unreal.Rotator(0.0, 0.0, 33.0)
+    probe_scale = unreal.Vector(2.0, 3.0, 4.0)
+
+    for name, builder in (("keyword", _by_keyword),
+                          ("positional", _by_position),
+                          ("property", _by_property)):
+        try:
+            t = builder(probe_loc, probe_rot, probe_scale)
+        except Exception as exc:
+            unreal.log("[Curbside] transform probe: {} unusable ({})".format(name, exc))
+            continue
+        if _reads_back(t, probe_loc, probe_scale):
+            ok("transform construction: {}".format(name))
+            return builder
+        unreal.log("[Curbside] transform probe: {} built but read back wrong".format(name))
+    return None
+
+
+# ---------------------------------------------------------------------------
+
+
 def make_material(name, rgb, roughness):
     """A flat coloured material. Without these the whole city is one grey."""
     full = "{}/{}".format(MATERIAL_PATH, name)
@@ -94,21 +170,76 @@ def make_material(name, rgb, roughness):
         return None
 
 
-def clear_previous(eas, labels):
-    """Remove what a previous run built, so re-running rebuilds rather than stacks."""
+def clear_orphans(labels):
+    """
+    Delete the empty placeholder Actors an earlier, broken run left behind.
+
+    The chunks themselves are cleared by DestroyWorldChunks; this only catches
+    plain AActors wearing a chunk's label, which is what version 2026-09-23.1
+    produced before it hit AddComponentByClass and gave up.
+    """
+    eas = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
     removed = 0
     for actor in eas.get_all_level_actors():
-        if actor.get_actor_label() in labels:
+        if actor is None:
+            continue
+        if isinstance(actor, unreal.CurbsideWorldChunk):
+            continue
+        try:
+            label = actor.get_actor_label()
+        except Exception:
+            continue
+        if label in labels:
             eas.destroy_actor(actor)
             removed += 1
     if removed:
-        ok("cleared {} actor(s) from a previous run".format(removed))
+        ok("removed {} empty placeholder actor(s) from an earlier run".format(removed))
+
+
+def instance_count(chunk):
+    """Read the count back off the component, however this build exposes it."""
+    for attempt in (
+        lambda: chunk.instances.get_instance_count(),
+        lambda: chunk.get_editor_property("instances").get_instance_count(),
+        lambda: chunk.get_component_by_class(
+            unreal.InstancedStaticMeshComponent).get_instance_count(),
+    ):
+        try:
+            return attempt()
+        except Exception:
+            continue
+    return -1
+
+
+def editor_world():
+    subsystem = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem)
+    return subsystem.get_editor_world()
+
+
+def require_module():
+    """The C++ side has to be built before any of this can work."""
+    missing = [n for n in ("CurbsideWorldChunk", "CurbsideWorldBuilder")
+               if not hasattr(unreal, n)]
+    if not missing:
+        return True
+
+    unreal.log_error("[Curbside] The C++ module is not built with the world builder in it.")
+    unreal.log_error("[Curbside] Missing from the Python API: {}".format(", ".join(missing)))
+    unreal.log_error("[Curbside] Close the editor, then in Terminal:")
+    unreal.log_error("[Curbside]   ~/EatYourWay/unreal/Tools/stage_module.sh \\")
+    unreal.log_error("[Curbside]     \"/Users/fahimdotfm/UE_Projects/Eat Your Way/EatYourWay/Source/EatYourWay\" \\")
+    unreal.log_error("[Curbside]     EatYourWay --with-chaos")
+    unreal.log_error("[Curbside] then rebuild, reopen the level, and run this script again.")
+    return False
 
 
 def build():
     unreal.log("[Curbside] ================================================")
     unreal.log("[Curbside] build_world.py  version {}".format(SCRIPT_VERSION))
     unreal.log("[Curbside] ================================================")
+
+    if not require_module():
+        return
 
     path = data_path()
     if not os.path.exists(path):
@@ -122,45 +253,61 @@ def build():
         fail("placeholder mesh missing at " + CUBE_PATH)
         return
 
-    eas = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
-    clear_previous(eas, {label for _, label, _, _ in CATEGORIES})
+    make_transform = pick_transform_builder()
+    if make_transform is None:
+        fail("could not construct an unreal.Transform by any known means")
+        return
 
-    origin = unreal.Vector(0.0, 0.0, 0.0)
-    no_rot = unreal.Rotator(0.0, 0.0, 0.0)
+    context = editor_world()
+    if context is None:
+        fail("no editor world — open a level first")
+        return
+
+    clear_orphans({label for _, label, _, _ in CATEGORIES})
+    gone = unreal.CurbsideWorldBuilder.destroy_world_chunks(context)
+    if gone:
+        ok("cleared {} chunk(s) from a previous run".format(gone))
+
     total = 0
-
     for key, label, rgb, roughness in CATEGORIES:
         entries = world.get(key, [])
         if not entries:
             continue
         try:
-            actor = eas.spawn_actor_from_class(unreal.Actor, origin, no_rot)
-            actor.set_actor_label(label)
-
-            ism = actor.add_component_by_class(
-                unreal.InstancedStaticMeshComponent, False, unreal.Transform(), False)
-            ism.set_static_mesh(cube)
-            # Static mobility lets the renderer cull and batch these properly;
-            # nothing in the city moves.
-            ism.set_mobility(unreal.ComponentMobility.STATIC)
-
             material = make_material("M_" + key.capitalize(), rgb, roughness)
-            if material:
-                ism.set_material(0, material)
 
+            transforms = []
             for e in entries:
                 loc = unreal.Vector(e["l"][0], e["l"][1], e["l"][2])
-                rot = unreal.Rotator(0.0, 0.0, e["r"])
+                rot = unreal.Rotator(0.0, 0.0, e["r"])  # (roll, pitch, yaw)
                 scale = unreal.Vector(e["s"][0], e["s"][1], e["s"][2])
-                ism.add_instance(unreal.Transform(loc, rot, scale))
+                transforms.append(make_transform(loc, rot, scale))
 
-            total += len(entries)
-            ok("{}: {} instances".format(label, len(entries)))
+            chunk = unreal.CurbsideWorldBuilder.spawn_world_chunk(
+                context, key, label, cube, material, transforms)
+            if chunk is None:
+                fail("{}: chunk did not spawn".format(label))
+                continue
+
+            placed = instance_count(chunk)
+            if placed < 0:
+                # Could not read the component back; trust the C++ log line.
+                total += len(entries)
+                ok("{}: {} instances (count not readable from Python)".format(label, len(entries)))
+            elif placed != len(entries):
+                fail("{}: asked for {} instances, got {}".format(label, len(entries), placed))
+            else:
+                total += placed
+                ok("{}: {} instances".format(label, placed))
         except Exception as exc:
             fail(label, exc)
 
     unreal.log("[Curbside] ---- summary ----")
-    unreal.log("[Curbside] {} instances placed across {} categories".format(total, len(_OK)))
+    try:
+        verified = unreal.CurbsideWorldBuilder.count_world_instances(context)
+    except Exception:
+        verified = total
+    unreal.log("[Curbside] {} instances placed; {} counted back from the level".format(total, verified))
     for line in _OK:
         unreal.log("[Curbside]   + " + line)
     if _FAIL:
@@ -169,7 +316,7 @@ def build():
             unreal.log_warning("[Curbside]   - " + line)
     else:
         unreal.log("[Curbside] no failures.")
-    unreal.log("[Curbside] Save the level to keep this. Fly east along +X to see Queens.")
+    unreal.log("[Curbside] Save the level to keep this.")
 
 
 build()

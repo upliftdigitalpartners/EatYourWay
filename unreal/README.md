@@ -7,14 +7,19 @@ the crawl rules, 27 vendors, and driveable/flyable/sailable vehicles.
 
 **Compiles clean on UE 5.7 / macOS** (Apple silicon, Mac SDK 26.5), verified
 2026-09-14 against a project module created from the Third Person template.
-UnrealHeaderTool passes with `-WarningsAsErrors`. **All 17 files build**,
-including the Chaos wheeled vehicle against 5.7's classic Chaos Vehicles — both
-the minimal stage and `--with-chaos` linked with no errors on the first attempt.
+UnrealHeaderTool passes with `-WarningsAsErrors`. All files build, including the
+Chaos wheeled vehicle against 5.7's classic Chaos Vehicles — both the minimal
+stage and `--with-chaos` linked with no errors on the first attempt.
 
-Still unverified: **runtime behaviour**. Nothing here has been played yet. The
-handling numbers are ported from the web build, where they were tuned, but they
-have not been re-tuned against Chaos/UE physics and should be treated as
-starting points.
+**Runs.** Verified 2026-09-23 in the editor: the six actor classes load, the
+vendor DataTable imports its 27 rows, `UCurbsideVendorSpawner` spawns all 27 at
+BeginPlay, and WASD movement works in Play. The 15 `DA_Vehicle_*` spec assets
+generate from `create_vehicle_specs.py`, and `setup_curbside.py` completes all
+11 of its steps.
+
+Still unverified: **handling**. The numbers are ported from the web build, where
+they were tuned, but they have not been re-tuned against Chaos/UE physics and
+should be treated as starting points.
 
 The default staging path below is deliberately minimal: it leaves out the one
 file that needs Chaos Vehicles and does not involve Cesium at all, so the first
@@ -187,6 +192,49 @@ own licence. Credit OpenStreetMap contributors on a title or credits screen.
 Google Photorealistic 3D Tiles is a different matter: its terms forbid caching,
 rehosting or deriving geometry, so it is not viable as a shipped game world.
 
+## 6b. Build the city
+
+The module ships six actor classes and 27 vendors, but no scenery — drop them
+into an empty level and you get vendors standing on a void. `build_world.py`
+fills that in with the procedural Queens from the web build: 3,019 buildings,
+the road grid, the elevated 7 train, Flushing Bay, Flushing Meadows and the two
+LaGuardia runways.
+
+```bash
+# 1. bake the geometry (Node, in this repo — already committed, only re-run
+#    if you change the generator)
+node tools/export-unreal-world.mjs
+
+# 2. stage and rebuild the module so ACurbsideWorldChunk exists
+./unreal/Tools/stage_module.sh <module-dir> <MODULENAME> --with-chaos
+```
+
+Then in the editor: **Tools > Execute Python Script…** → `unreal/Tools/build_world.py`.
+
+It places 4,352 instances across six `Curbside_*` chunk actors and prints a
+count it reads back off the components, so the log says what actually landed
+rather than what it tried to place. Re-running replaces the previous chunks.
+Save the level afterwards.
+
+### Why this needs C++
+
+Unreal's Python API has no `AddComponentByClass` — you cannot add a component to
+an actor from a script. So an `InstancedStaticMeshComponent` can only come from
+a class that already has one. That class is `ACurbsideWorldChunk`
+(`CurbsideWorldChunk.h`), and `UCurbsideWorldBuilder` is the
+`BlueprintCallable` entry point the script calls.
+
+The split is deliberate: every bit of geometry maths lives in
+`tools/export-unreal-world.mjs`, where it runs under Node and can be checked.
+The editor script — the part that cannot be tested from outside Unreal — only
+marshals finished transforms.
+
+One instanced component per category means six draw calls for the whole city
+rather than 4,352 actors, which also matters on a phone.
+
+The chunks collide (`BlockAll`), which is what gives the vendor spawner's ground
+trace something to land on.
+
 ## 7. How the rules work
 
 `UCurbsideRunComponent` (on the PlayerState, so it survives pawn swaps) owns one
@@ -205,7 +253,7 @@ Call `Order(Vendor.Row, Item, OutFlavor)` from your order widget; bind
 
 ## 8. Known gaps
 
-- **Not compiled.** See the status note above.
+- **Handling is untuned.** See the status note above.
 - **No touch controls.** Input is keyboard-shaped. For Android you need
   on-screen controls; `src/ui/` in the web build has a tested layout to
   reference, though the code doesn't port.
