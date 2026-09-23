@@ -33,8 +33,8 @@ PLACEHOLDER_CUBE = "/Game/LevelPrototyping/Meshes/SM_Cube"
 
 # The ground slab, sized to catch every vendor from Jackson Heights to Flushing.
 # Vendors span x 478-5543 m and y -325 to +245 m; this covers it with margin.
-GROUND_LOCATION = unreal.Vector(300000.0, -5000.0, -100.0)
-GROUND_SCALE = unreal.Vector(6000.0, 700.0, 1.0)
+GROUND_LOCATION = (300000.0, -5000.0, -100.0)
+GROUND_SCALE = (6000.0, 700.0, 1.0)
 
 # Set False to leave your level untouched and only create assets.
 MODIFY_LEVEL = True
@@ -119,22 +119,80 @@ def new_modifier(cls):
     return unreal.new_object(cls)
 
 
+def find_class(*candidates):
+    """First of these that exists on the unreal module, or None."""
+    for name in candidates:
+        found = getattr(unreal, name, None)
+        if found is not None:
+            return found
+    return None
+
+
+def resolve_enum(enum_candidates, member_label):
+    """Look up an enum member by human label, tolerating Unreal's renaming.
+
+    Unreal's Python bindings uppercase and underscore enum members, and exactly
+    where the underscores land has changed between versions: "Axis2D" has been
+    AXIS2_D, AXIS2D and AXIS_2D. Matching on the letters alone survives all of
+    them, and is why this is resolved at runtime instead of hard-coded.
+    """
+    enum = find_class(*enum_candidates)
+    if enum is None:
+        return None
+    want = member_label.upper().replace("_", "")
+    for attr in dir(enum):
+        if attr.startswith("_"):
+            continue
+        if attr.upper().replace("_", "") == want:
+            return getattr(enum, attr)
+    return None
+
+
+@step
+def probe_api():
+    """Log what this engine version exposes for the parts most likely to differ.
+
+    Written because this script could not be tested before you ran it: even if
+    a later step fails, this output names the real symbols so the next pass is
+    a fix rather than another guess.
+    """
+    def members(obj):
+        return sorted(a for a in dir(obj) if not a.startswith("_"))
+
+    for enum_name in ("InputActionValueType", "EInputActionValueType",
+                      "InputAxisSwizzle", "EInputAxisSwizzle"):
+        e = getattr(unreal, enum_name, None)
+        unreal.log("[Curbside] api enum unreal.{}: {}".format(
+            enum_name, members(e) if e is not None else "MISSING"))
+
+    for cls_name in ("InputAction", "InputMappingContext", "EnhancedActionKeyMapping",
+                     "InputModifierSwizzleAxis", "InputModifierNegate",
+                     "InputActionFactory", "InputMappingContextFactory",
+                     "DataAssetFactory", "BlueprintFactory", "EditorActorSubsystem"):
+        unreal.log("[Curbside] api class unreal.{}: {}".format(
+            cls_name, "present" if hasattr(unreal, cls_name) else "MISSING"))
+
+    ok("api probe logged")
+
+
 # ------------------------------------------------------------------ input assets
 
-# name -> value type
+# name -> value type, as a plain label. Unreal's Python bindings rename enum
+# members between versions (AXIS2_D vs AXIS2D vs ...), so these are resolved at
+# runtime by resolve_enum rather than hard-coded.
 INPUT_ACTIONS = {
-    "IA_Move":     unreal.InputActionValueType.AXIS2_D,
-    "IA_Look":     unreal.InputActionValueType.AXIS2_D,
-    "IA_Cyclic":   unreal.InputActionValueType.AXIS2_D,
-    "IA_Throttle": unreal.InputActionValueType.AXIS1_D,
-    "IA_Steer":    unreal.InputActionValueType.AXIS1_D,
-    "IA_Yaw":      unreal.InputActionValueType.AXIS1_D,
-    "IA_Lift":     unreal.InputActionValueType.AXIS1_D,
-    "IA_Jump":     unreal.InputActionValueType.BOOLEAN,
-    "IA_Sprint":   unreal.InputActionValueType.BOOLEAN,
-    "IA_Brake":    unreal.InputActionValueType.BOOLEAN,
-    "IA_Interact": unreal.InputActionValueType.BOOLEAN,
-    "IA_Exit":     unreal.InputActionValueType.BOOLEAN,
+    "IA_Move":     "Axis2D",
+    "IA_Look":     "Axis2D",
+    "IA_Cyclic":   "Axis2D",
+    "IA_Throttle": "Axis1D",
+    "IA_Steer":    "Axis1D",
+    "IA_Yaw":      "Axis1D",
+    "IA_Lift":     "Axis1D",
+    "IA_Jump":     "Boolean",
+    "IA_Sprint":   "Boolean",
+    "IA_Brake":    "Boolean",
+    "IA_Interact": "Boolean",
+    "IA_Exit":     "Boolean",
 }
 
 
@@ -149,12 +207,17 @@ def create_input_actions():
             factory = getattr(unreal, candidate)()
             break
 
-    for name, value_type in INPUT_ACTIONS.items():
+    for name, label in INPUT_ACTIONS.items():
         asset = ensure_asset(name, P_INPUT, unreal.InputAction, factory)
         if not asset:
             fail("create " + name)
             continue
-        asset.set_editor_property("value_type", value_type)
+        value_type = resolve_enum(
+            ("InputActionValueType", "EInputActionValueType"), label)
+        if value_type is None:
+            fail("no enum member for value type '{}' (see api probe)".format(label))
+        else:
+            asset.set_editor_property("value_type", value_type)
         save(asset)
         made[name] = asset
 
@@ -174,11 +237,17 @@ def mapping(action, key_name, negate=False, swizzle=False):
     m.set_editor_property("key", make_key(key_name))
     mods = []
     if swizzle:
-        sw = new_modifier(unreal.InputModifierSwizzleAxis)
-        sw.set_editor_property("order", unreal.InputAxisSwizzle.YXZ)
-        mods.append(sw)
+        swizzle_cls = find_class("InputModifierSwizzleAxis")
+        if swizzle_cls is not None:
+            sw = new_modifier(swizzle_cls)
+            order = resolve_enum(("InputAxisSwizzle", "EInputAxisSwizzle"), "YXZ")
+            if order is not None:
+                sw.set_editor_property("order", order)
+            mods.append(sw)
     if negate:
-        mods.append(new_modifier(unreal.InputModifierNegate))
+        negate_cls = find_class("InputModifierNegate")
+        if negate_cls is not None:
+            mods.append(new_modifier(negate_cls))
     if mods:
         m.set_editor_property("modifiers", mods)
     return m
@@ -390,13 +459,13 @@ def setup_level(vendor_bp):
     ground = next((a for a in existing if a.get_actor_label() == "Curbside_Ground"), None)
     if ground is None:
         ground = eas.spawn_actor_from_class(
-            unreal.StaticMeshActor, GROUND_LOCATION, unreal.Rotator(0, 0, 0))
+            unreal.StaticMeshActor, unreal.Vector(*GROUND_LOCATION), unreal.Rotator(0, 0, 0))
         ground.set_actor_label("Curbside_Ground")
     cube = load(PLACEHOLDER_CUBE)
     if cube:
         ground.static_mesh_component.set_static_mesh(cube)
-    ground.set_actor_scale3d(GROUND_SCALE)
-    ground.set_actor_location(GROUND_LOCATION, False, False)
+    ground.set_actor_scale3d(unreal.Vector(*GROUND_SCALE))
+    ground.set_actor_location(unreal.Vector(*GROUND_LOCATION), False, False)
     ok("ground slab (6 km x 700 m)")
 
     # Point any existing spawner at the vendor Blueprint, or make one.
@@ -422,6 +491,8 @@ def setup_level(vendor_bp):
 
 def main():
     unreal.log("[Curbside] ---- setup starting ----")
+
+    probe_api()
 
     actions = create_input_actions() or {}
     contexts = create_mapping_contexts(actions) or {}
