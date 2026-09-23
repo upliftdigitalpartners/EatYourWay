@@ -25,7 +25,7 @@ so run this again after it.
 import math
 import unreal
 
-SCRIPT_VERSION = "2026-09-23.5"
+SCRIPT_VERSION = "2026-09-23.6"
 
 MATERIAL_PATH = "/Game/Curbside/Materials"
 BUILDING_MATERIAL = "M_CurbsideBuilding"
@@ -53,6 +53,14 @@ def fail(msg, err=None):
     unreal.log_error("[Curbside] FAIL " + detail)
 
 
+def probe(obj, needle):
+    """Log what this build actually calls things, so a miss is fixable once."""
+    names = sorted(n for n in dir(obj) if needle in n.lower())
+    note("{} API containing '{}': {}".format(
+        type(obj).__name__, needle, ", ".join(names) if names else "(none)"))
+    return names
+
+
 def note(msg):
     unreal.log("[Curbside]      " + msg)
 
@@ -65,6 +73,19 @@ def prop(obj, name, value):
     except Exception as exc:
         note("skipped {}.{} ({})".format(type(obj).__name__, name, exc))
         return False
+
+
+def prop_any(obj, names, value):
+    """The same property, spelled the several ways Unreal has spelled it."""
+    for name in names:
+        try:
+            obj.set_editor_property(name, value)
+            return True
+        except Exception:
+            continue
+    note("skipped {}.{} (no such property under any known name)".format(
+        type(obj).__name__, names[0]))
+    return False
 
 
 # ---------------------------------------------------------------------------
@@ -130,7 +151,7 @@ def light_the_city():
             prop(comp, "light_color", unreal.Color(255, 244, 224, 255))
             prop(comp, "dynamic_shadow_distance_movable_light", 60000.0)
             prop(comp, "cascade_distribution_exponent", 3.5)
-            prop(comp, "num_dynamic_shadow_cascades", 4)
+            prop_any(comp, ["dynamic_shadow_cascades", "num_dynamic_shadow_cascades"], 4)
             prop(comp, "atmosphere_sun_light", True)
         sun.set_actor_rotation(unreal.Rotator(0.0, SUN_PITCH, SUN_YAW), False)
         ok("sun {} (pitch {:.0f}, yaw {:.0f})".format(
@@ -169,7 +190,7 @@ def light_the_city():
             prop(comp, "fog_height_falloff", 0.15)
             prop(comp, "start_distance", 1200.0)
             prop(comp, "fog_max_opacity", 0.85)
-            prop(comp, "volumetric_fog", True)
+            prop_any(comp, ["enable_volumetric_fog", "volumetric_fog"], True)
             prop(comp, "volumetric_fog_distance", 40000.0)
         ok("height fog {}".format("placed" if made else "retuned"))
 
@@ -256,6 +277,12 @@ class Graph(object):
         return n
 
 
+def set_usage_flags(mat):
+    """Without these the first draw call logs a warning and recompiles."""
+    prop(mat, "used_with_instanced_static_meshes", True)
+    prop(mat, "used_with_nanite", True)
+
+
 def load_asset(path):
     if unreal.EditorAssetLibrary.does_asset_exist(path):
         return unreal.EditorAssetLibrary.load_asset(path)
@@ -276,11 +303,11 @@ def build_building_material():
     full = "{}/{}".format(MATERIAL_PATH, BUILDING_MATERIAL)
     existing = load_asset(full)
     if existing is not None:
+        set_usage_flags(existing)
         return existing
 
     mat = unreal.AssetToolsHelpers.get_asset_tools().create_asset(
         BUILDING_MATERIAL, MATERIAL_PATH, unreal.Material, unreal.MaterialFactoryNew())
-    prop(mat, "used_with_instanced_static_meshes", True)
 
     g = Graph(mat)
 
@@ -366,6 +393,7 @@ def build_building_material():
                         glow_colour, 60, 700)
     g.out(emissive, unreal.MaterialProperty.MP_EMISSIVE_COLOR)
 
+    set_usage_flags(mat)
     unreal.MaterialEditingLibrary.recompile_material(mat)
     unreal.EditorAssetLibrary.save_loaded_asset(mat)
     return mat
@@ -426,6 +454,29 @@ def variation(transform):
     return tint, glow
 
 
+def pick_custom_data_writer(ism):
+    """
+    SetCustomData is not exposed to Python in 5.7, but SetCustomDataValue is.
+    Probe rather than guess, and log the real names so a miss is fixable once.
+    """
+    probe(ism, "custom")
+
+    if hasattr(ism, "set_custom_data"):
+        ok("custom data: set_custom_data")
+        return lambda i, values: ism.set_custom_data(i, values, False)
+
+    if hasattr(ism, "set_custom_data_value"):
+        ok("custom data: set_custom_data_value")
+
+        def write(i, values):
+            for slot, value in enumerate(values):
+                ism.set_custom_data_value(i, slot, value, False)
+
+        return write
+
+    return None
+
+
 def dress_buildings(material):
     chunk = buildings_chunk()
     if chunk is None:
@@ -449,6 +500,12 @@ def dress_buildings(material):
         ok("buildings: material applied to {} instances".format(count))
         return
 
+    write = pick_custom_data_writer(ism)
+    if write is None:
+        fail("no way to write per-instance custom data on this build")
+        ok("buildings: material applied to {} instances".format(count))
+        return
+
     written = 0
     for i in range(count):
         try:
@@ -461,11 +518,11 @@ def dress_buildings(material):
         # A fifth of the city has its lights on. Enough to read; not a runway.
         lit = 0.0 if glow > 0.20 else (0.35 + glow * 2.5)
         try:
-            ism.set_custom_data(i, [tint, lit], False)
+            write(i, [tint, lit])
             written += 1
         except Exception as exc:
             if written == 0:
-                fail("set_custom_data", exc)
+                fail("writing custom data", exc)
                 break
 
     try:
