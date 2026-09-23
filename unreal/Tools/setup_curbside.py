@@ -23,6 +23,8 @@ import unreal
 
 # ---------------------------------------------------------------- configuration
 
+SCRIPT_VERSION = "2026-09-23.2"
+
 ROOT = "/Game/Curbside"
 P_BLUEPRINTS = ROOT + "/Blueprints"
 P_INPUT = ROOT + "/Input"
@@ -490,7 +492,9 @@ def setup_level(vendor_bp):
 # --------------------------------------------------------------------------- run
 
 def main():
-    unreal.log("[Curbside] ---- setup starting ----")
+    unreal.log("[Curbside] ================================================")
+    unreal.log("[Curbside] setup_curbside.py  version {}".format(SCRIPT_VERSION))
+    unreal.log("[Curbside] ================================================")
 
     probe_api()
 
