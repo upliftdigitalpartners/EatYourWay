@@ -30,20 +30,24 @@ DEFAULT_PROJECT = "/Users/fahimdotfm/UE_Projects/Eat Your Way/EatYourWay/EatYour
 HERE = os.path.dirname(os.path.abspath(__file__))
 SOURCE = os.path.join(os.path.dirname(HERE), "Config", "Android.ini")
 
-# Plugins with no Android binaries.
+# Plugins this project does not use, and which break the cook.
 #
-# A plugin that is enabled but cannot be built for the target does not get
-# quietly skipped: the cook commandlet fails outright with "failed to load
-# because module X could not be loaded", which reads like a broken install
-# rather than a plugin that was never going to work. The Android .so links
-# fine either way, because the build step skips them too, so the error only
-# turns up minutes later during the cook.
+# These are switched OFF, not merely held back from Android. A PlatformDenyList
+# is evaluated against the TARGET platform, but the cook commandlet runs on the
+# host: UnrealEditor-Cmd on the Mac loads plugins for the Mac, so denying a
+# plugin to Android never reaches the process that is failing.
 #
-# These stay enabled for the editor and for desktop; they are only denied to
-# the phone. Add to this list when the next one appears.
-DESKTOP_ONLY_PLUGINS = ["CesiumForUnreal"]
-
-DENIED_PLATFORMS = ["Android", "IOS"]
+# Cesium earns its place here twice over. It already logs errors in the editor
+# ("EnumProperty FCesiumMetadataPropertyStatisticValue::Semantic is not
+# initialized properly. Module:CesiumRuntime"), which the editor survives by
+# warning and carrying on. A commandlet run with -unattended has nobody to warn,
+# so the same broken module load becomes a hard exit and takes the cook with it.
+# And nothing here uses it: no file in Source/Curbside includes a Cesium header,
+# and the city is built from exported JSON, not Cesium tilesets.
+#
+# To put it back: set "Enabled": true for it in the .uproject, or delete the
+# entry entirely, and it returns to whatever the engine default was.
+UNUSED_PLUGINS = ["CesiumForUnreal"]
 
 
 def parse_ini(text):
@@ -133,14 +137,14 @@ def merge(existing_text, wanted):
     return "\n".join(lines) + "\n", changes
 
 
-def deny_desktop_only_plugins(project):
+def disable_unused_plugins(project):
     """
-    Add Android and iOS to each desktop-only plugin's deny list in the
-    .uproject. Returns a list of what changed.
+    Switch off the plugins in UNUSED_PLUGINS in the .uproject. Returns a list
+    of what changed.
 
-    The plugin stays enabled — this only tells the packager not to expect it on
-    a phone. A plugin the project never listed (one enabled by default at the
-    engine level, like a Marketplace install) gets an entry added for it.
+    A plugin enabled by default at the engine level — a Fab or Marketplace
+    install — is not listed in the .uproject at all, so an entry is added for
+    it. An explicit "Enabled": false there overrides the engine default.
     """
     with open(project, "r") as handle:
         data = json.load(handle)
@@ -148,19 +152,20 @@ def deny_desktop_only_plugins(project):
     plugins = data.setdefault("Plugins", [])
     changes = []
 
-    for name in DESKTOP_ONLY_PLUGINS:
+    for name in UNUSED_PLUGINS:
         entry = next((p for p in plugins if p.get("Name") == name), None)
         if entry is None:
-            entry = {"Name": name, "Enabled": True}
-            plugins.append(entry)
-
-        denied = entry.get("PlatformDenyList", [])
-        missing = [p for p in DENIED_PLATFORMS if p not in denied]
-        if not missing:
+            plugins.append({"Name": name, "Enabled": False})
+            changes.append("{}: disabled".format(name))
             continue
 
-        entry["PlatformDenyList"] = denied + missing
-        changes.append("{}: denied on {}".format(name, ", ".join(missing)))
+        # Clear a PlatformDenyList an earlier version of this script added.
+        # It never worked, and leaving it behind would suggest it did.
+        entry.pop("PlatformDenyList", None)
+
+        if entry.get("Enabled", True):
+            entry["Enabled"] = False
+            changes.append("{}: disabled".format(name))
 
     if changes:
         shutil.copyfile(project, project + ".bak")
@@ -213,21 +218,25 @@ def main():
         print("  {}".format(target))
 
     try:
-        plugin_changes = deny_desktop_only_plugins(project)
+        plugin_changes = disable_unused_plugins(project)
     except (OSError, ValueError) as exc:
         print()
         print("warning: could not update the plugin list in the .uproject: {}".format(exc))
-        print("         if the cook fails on a plugin that has no Android build,")
-        print("         add \"PlatformDenyList\": [\"Android\"] to its entry by hand.")
+        print("         if the cook fails loading a plugin, set its")
+        print("         \"Enabled\": false in the .uproject by hand.")
         return 0
 
     print()
     if plugin_changes:
-        print("Plugins held back from Android (previous .uproject saved as .bak):")
+        print("Unused plugins switched off (previous .uproject saved as .bak):")
         for change in plugin_changes:
             print("  {}".format(change))
+        print()
+        print("  These are off in the EDITOR too, not just on the phone.")
+        print("  Nothing here uses them; set \"Enabled\": true in the .uproject")
+        print("  to bring one back.")
     else:
-        print("Desktop-only plugins already held back from Android.")
+        print("Unused plugins already switched off.")
     return 0
 
 

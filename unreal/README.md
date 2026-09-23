@@ -161,6 +161,14 @@ authoring from scratch. Get *one* car driving before making the other eight.
 
 ## 6. Later: add Cesium for real Queens
 
+> **Cesium is switched off.** `configure_android.py` sets `"Enabled": false`
+> for it in the `.uproject`, because its `CesiumRuntime` module fails to load
+> in a commandlet and takes the Android cook down with it — the editor survives
+> the same failure by warning and carrying on, a cook run with `-unattended`
+> does not. Nothing in this module includes a Cesium header, so it costs us
+> nothing. To pick this section back up, set `"Enabled": true` and expect to
+> fix that module load before you can package for a phone again.
+
 Install **Cesium for Unreal** from Fab (free, Apache 2.0), then:
 
 1. Place a **CesiumGeoreference** and set its origin to Roosevelt Ave,
