@@ -71,10 +71,30 @@ if [[ $STATUS -ne 0 ]]; then
     echo "  PACKAGING FAILED"
     echo "================================================================"
     printf '\033[0m\n'
-    echo "The full log is at:"
-    echo "  $HOME/Library/Logs/Unreal Engine/LocalBuildLogs/"
+
+    # There are three logs and they fail for different reasons, so print from
+    # whichever one actually has the errors rather than naming a directory and
+    # leaving you to guess. The cook log is the one UAT writes under the
+    # engine, not the build log under ~/Library/Logs.
+    COOK_LOG="$(ls -t "$ENGINE/Engine/Programs/AutomationTool/Saved/"Cook-*.txt 2>/dev/null | head -1)"
+    BUILD_LOG="$(ls -t "$HOME/Library/Logs/Unreal Engine/LocalBuildLogs/"*.txt 2>/dev/null | head -1)"
+
+    for LOG in "$COOK_LOG" "$BUILD_LOG"; do
+        [[ -n "$LOG" && -f "$LOG" ]] || continue
+        HITS="$(grep -nE "Error:|error:|Fatal|Warning: Failed" "$LOG" | head -20)"
+        [[ -n "$HITS" ]] || continue
+        echo "From $LOG:"
+        echo
+        echo "$HITS"
+        echo
+        break
+    done
+
+    echo "Full logs:"
+    [[ -n "$COOK_LOG"  ]] && echo "  cook  $COOK_LOG"
+    [[ -n "$BUILD_LOG" ]] && echo "  build $BUILD_LOG"
     echo
-    echo "Send me the last 40 lines of the newest .txt in there."
+    echo "Send me the errors above, or the last 60 lines of the cook log."
     exit 1
 fi
 
