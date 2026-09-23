@@ -26,7 +26,7 @@ import unreal
 
 # ---------------------------------------------------------------- configuration
 
-SCRIPT_VERSION = "2026-09-23.11"
+SCRIPT_VERSION = "2026-09-23.12"
 
 ROOT = "/Game/Curbside"
 P_BLUEPRINTS = ROOT + "/Blueprints"
@@ -38,6 +38,7 @@ PLACEHOLDER_CUBE = "/Game/LevelPrototyping/Meshes/SM_Cube"
 
 # The ground slab, sized to catch every vendor from Jackson Heights to Flushing.
 # Vendors span x 478-5543 m and y -325 to +245 m; this covers it with margin.
+# Fallback only. The real slab is measured from the city — see ground_slab().
 GROUND_LOCATION = (300000.0, -5000.0, -100.0)
 GROUND_SCALE = (6000.0, 700.0, 1.0)
 
@@ -374,6 +375,43 @@ BP_NAME_OVERRIDES = {
 }
 
 
+def ground_slab():
+    """
+    Where to put the ground, measured from the city rather than guessed.
+
+    The slab used to be a hardcoded 6 km x 700 m. The city is 6.4 km x 3.1 km,
+    so five sixths of it had nothing underneath: black voids between the blocks,
+    and vendors out there had no surface to snap to.
+
+    Returns (location, scale) in Unreal units for a 1 m cube.
+    """
+    here = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(os.path.dirname(here), "Data", "world_instances.json")
+    try:
+        with open(path, "r") as handle:
+            world = json.load(handle)
+    except Exception as exc:
+        note("could not measure the city ({}); using the fallback slab".format(exc))
+        return GROUND_LOCATION, GROUND_SCALE
+
+    xs, ys = [], []
+    for entries in world.values():
+        for e in entries:
+            xs.append(e["l"][0])
+            ys.append(e["l"][1])
+    if not xs:
+        return GROUND_LOCATION, GROUND_SCALE
+
+    # A margin so the edge is past the outermost building rather than under it.
+    margin = 20000.0  # 200 m
+    x0, x1 = min(xs) - margin, max(xs) + margin
+    y0, y1 = min(ys) - margin, max(ys) + margin
+
+    location = ((x0 + x1) * 0.5, (y0 + y1) * 0.5, -100.0)
+    scale = ((x1 - x0) / 100.0, (y1 - y0) / 100.0, 1.0)
+    return location, scale
+
+
 def vehicle_pawn_roster():
     """
     (blueprint name, C++ class, spec asset, size in metres) for every vehicle.
@@ -553,17 +591,20 @@ def setup_level(vendor_bp):
     existing = eas.get_all_level_actors()
 
     # Ground slab, so vendors have something to snap onto.
+    location, scale = ground_slab()
+
     ground = next((a for a in existing if a.get_actor_label() == "Curbside_Ground"), None)
     if ground is None:
         ground = eas.spawn_actor_from_class(
-            unreal.StaticMeshActor, unreal.Vector(*GROUND_LOCATION), unreal.Rotator(0, 0, 0))
+            unreal.StaticMeshActor, unreal.Vector(*location), unreal.Rotator(0, 0, 0))
         ground.set_actor_label("Curbside_Ground")
     cube = load(PLACEHOLDER_CUBE)
     if cube:
         ground.static_mesh_component.set_static_mesh(cube)
-    ground.set_actor_scale3d(unreal.Vector(*GROUND_SCALE))
-    ground.set_actor_location(unreal.Vector(*GROUND_LOCATION), False, False)
-    ok("ground slab (6 km x 700 m)")
+    ground.set_actor_scale3d(unreal.Vector(*scale))
+    ground.set_actor_location(unreal.Vector(*location), False, False)
+    ok("ground slab ({:.1f} km x {:.1f} km, measured from the city)".format(
+        scale[0] / 1000.0, scale[1] / 1000.0))
 
     # Point any existing spawner at the vendor Blueprint, or make one.
     spawner = next((a for a in existing
