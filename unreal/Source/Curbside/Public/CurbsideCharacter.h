@@ -93,6 +93,17 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Curbside")
     void ExitVehicle(APawn* Vehicle);
 
+    /**
+     * Get whoever is driving `Vehicle` out of it. Returns false if nobody is.
+     *
+     * The vehicles cannot reach their driver directly — they share an interface,
+     * not a base class, and the controller has moved on to the vehicle. But
+     * EnterVehicle attaches the character to the vehicle so it travels with it,
+     * so the driver is simply the attached ACurbsideCharacter.
+     */
+    UFUNCTION(BlueprintCallable, Category = "Curbside")
+    static bool LeaveVehicle(APawn* Vehicle);
+
     UFUNCTION(BlueprintPure, Category = "Curbside")
     ACurbsideVendorActor* GetVendorInRange() const { return VendorInRange; }
 

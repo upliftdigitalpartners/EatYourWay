@@ -2,6 +2,7 @@
 
 #include "Camera/CameraComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "CurbsideCharacter.h"
 #include "CurbsideRunComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
@@ -127,7 +128,14 @@ void ACurbsideRoadVehicle::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 void ACurbsideRoadVehicle::HandleThrottle(const FInputActionValue& Value) { ThrottleInput = Value.Get<float>(); }
 void ACurbsideRoadVehicle::HandleSteer(const FInputActionValue& Value)    { SteerInput = Value.Get<float>(); }
 void ACurbsideRoadVehicle::HandleBrake(const FInputActionValue& Value)    { BrakeInput = Value.Get<float>(); }
-void ACurbsideRoadVehicle::HandleExit(const FInputActionValue& /*Value*/) { OnRequestExit(); }
+void ACurbsideRoadVehicle::HandleExit(const FInputActionValue& /*Value*/)
+{
+    // Put the driver back on the pavement, then let Blueprint add whatever
+    // else getting out should do. Without the first line F does nothing and
+    // you are in the car for good.
+    ACurbsideCharacter::LeaveVehicle(this);
+    OnRequestExit();
+}
 
 UCurbsideRunComponent* ACurbsideRoadVehicle::FindRunComponent() const
 {

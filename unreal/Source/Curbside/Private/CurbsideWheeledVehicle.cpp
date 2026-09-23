@@ -3,6 +3,7 @@
 #include "ChaosWheeledVehicleMovementComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "CurbsideCharacter.h"
 #include "CurbsideRunComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -122,6 +123,7 @@ void ACurbsideWheeledVehicle::HandleBrakeStop(const FInputActionValue& /*Value*/
 
 void ACurbsideWheeledVehicle::HandleExit(const FInputActionValue& /*Value*/)
 {
+    ACurbsideCharacter::LeaveVehicle(this);
     OnRequestExit();
 }
 

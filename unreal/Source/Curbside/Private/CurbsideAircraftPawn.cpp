@@ -2,6 +2,7 @@
 
 #include "Camera/CameraComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "CurbsideCharacter.h"
 #include "CurbsideRunComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -97,7 +98,11 @@ void ACurbsideAircraftPawn::SetupPlayerInputComponent(UInputComponent* PlayerInp
 void ACurbsideAircraftPawn::HandleThrottle(const FInputActionValue& Value) { ThrottleInput = Value.Get<float>(); }
 void ACurbsideAircraftPawn::HandleYaw(const FInputActionValue& Value)      { YawInput = Value.Get<float>(); }
 void ACurbsideAircraftPawn::HandleLift(const FInputActionValue& Value)     { LiftInput = Value.Get<float>(); }
-void ACurbsideAircraftPawn::HandleExit(const FInputActionValue& /*Value*/) { OnRequestExit(); }
+void ACurbsideAircraftPawn::HandleExit(const FInputActionValue& /*Value*/)
+{
+    ACurbsideCharacter::LeaveVehicle(this);
+    OnRequestExit();
+}
 
 void ACurbsideAircraftPawn::HandleCyclic(const FInputActionValue& Value)
 {

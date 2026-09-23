@@ -2,6 +2,7 @@
 
 #include "Camera/CameraComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "CurbsideCharacter.h"
 #include "CurbsideRunComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -83,7 +84,11 @@ void ACurbsideBoatPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 void ACurbsideBoatPawn::HandleThrottle(const FInputActionValue& Value) { ThrottleInput = Value.Get<float>(); }
 void ACurbsideBoatPawn::HandleSteer(const FInputActionValue& Value)    { SteerInput = Value.Get<float>(); }
-void ACurbsideBoatPawn::HandleExit(const FInputActionValue& /*Value*/) { OnRequestExit(); }
+void ACurbsideBoatPawn::HandleExit(const FInputActionValue& /*Value*/)
+{
+    ACurbsideCharacter::LeaveVehicle(this);
+    OnRequestExit();
+}
 
 UCurbsideRunComponent* ACurbsideBoatPawn::FindRunComponent() const
 {

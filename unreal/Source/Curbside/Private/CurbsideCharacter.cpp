@@ -192,6 +192,26 @@ void ACurbsideCharacter::ExitVehicle(APawn* Vehicle)
     C->Possess(this);
 }
 
+bool ACurbsideCharacter::LeaveVehicle(APawn* Vehicle)
+{
+    if (Vehicle == nullptr)
+    {
+        return false;
+    }
+
+    TArray<AActor*> Attached;
+    Vehicle->GetAttachedActors(Attached);
+    for (AActor* Actor : Attached)
+    {
+        if (ACurbsideCharacter* Driver = Cast<ACurbsideCharacter>(Actor))
+        {
+            Driver->ExitVehicle(Vehicle);
+            return true;
+        }
+    }
+    return false;
+}
+
 void ACurbsideCharacter::ScanForInteractables()
 {
     ACurbsideVendorActor* BestVendor = nullptr;
