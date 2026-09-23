@@ -205,9 +205,17 @@ LaGuardia runways.
 #    if you change the generator)
 node tools/export-unreal-world.mjs
 
-# 2. stage and rebuild the module so ACurbsideWorldChunk exists
-./unreal/Tools/stage_module.sh <module-dir> <MODULENAME> --with-chaos
+# 2. quit the editor, then pull + stage + build in one command
+./unreal/Tools/rebuild.sh
 ```
+
+`rebuild.sh` exists because doing those as three separate commands is two
+chances to do one and not the others, and a half-done rebuild is indis&#8203;tinguishable
+from a code bug once you are inside the editor — the script just reports
+`C++ class not found`. It refuses to start while the editor is open (Unreal
+holds the module dylib, so the build either fails or writes a binary the
+running editor will never load), and it stops at the first failure with the
+compiler errors rather than carrying on and looking like it worked.
 
 Then in the editor: **Tools > Execute Python Script…** → `unreal/Tools/build_world.py`.
 
