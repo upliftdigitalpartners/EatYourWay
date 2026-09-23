@@ -97,8 +97,8 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Curbside")
     FTransform GeoreferenceOrigin = FTransform::Identity;
 
-    /** Drop each vendor onto whatever is beneath it. With streamed Cesium
-     *  terrain the ground may not be loaded yet, so this retries. */
+    /** Drop each vendor onto whatever is beneath it, retrying for a few
+     *  seconds in case the ground under one is still streaming in. */
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Curbside")
     bool bSnapToGround = true;
 
@@ -112,9 +112,13 @@ private:
     UPROPERTY()
     TArray<TObjectPtr<ACurbsideVendorActor>> Spawned;
 
-    /** Cesium streams terrain in, so a ground trace at BeginPlay often misses.
-     *  Retry the ones that failed until they land or we give up. */
+    /** Drop the vendors still in the air onto whatever is beneath them, and
+     *  retry the ones that miss in case geometry is still streaming in. */
     void RetrySnapToGround();
+
+    /** The subset still in the air. Separate from Spawned, which is public. */
+    UPROPERTY()
+    TArray<TObjectPtr<ACurbsideVendorActor>> Unsnapped;
 
     FTimerHandle SnapTimer;
     int32 SnapAttempts = 0;

@@ -112,6 +112,7 @@ void ACurbsideVendorSpawner::SpawnVendors()
     if (bSnapToGround)
     {
         SnapAttempts = 0;
+        Unsnapped = Spawned;
         RetrySnapToGround();
     }
 }
@@ -119,12 +120,16 @@ void ACurbsideVendorSpawner::SpawnVendors()
 void ACurbsideVendorSpawner::RetrySnapToGround()
 {
     ++SnapAttempts;
-    int32 Remaining = 0;
 
-    for (const TObjectPtr<ACurbsideVendorActor>& Vendor : Spawned)
+    // Trace only the ones still in the air. `Spawned` is what the rest of the
+    // game reads, so it is never touched here; retrying against a shrinking
+    // list also stops the 17 that already landed being re-snapped every second.
+    for (int32 i = Unsnapped.Num() - 1; i >= 0; --i)
     {
-        if (!IsValid(Vendor.Get()))
+        ACurbsideVendorActor* Vendor = Unsnapped[i].Get();
+        if (!IsValid(Vendor))
         {
+            Unsnapped.RemoveAt(i);
             continue;
         }
 
@@ -134,30 +139,49 @@ void ACurbsideVendorSpawner::RetrySnapToGround()
 
         FHitResult Hit;
         FCollisionQueryParams Params;
-        Params.AddIgnoredActor(Vendor.Get());
+        Params.AddIgnoredActor(Vendor);
         Params.AddIgnoredActor(this);
 
         if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_WorldStatic, Params))
         {
             Vendor->SetActorLocation(Hit.ImpactPoint);
-        }
-        else
-        {
-            ++Remaining;
+            Unsnapped.RemoveAt(i);
         }
     }
 
-    // Cesium tiles stream in over the first few seconds; give them time before
-    // leaving vendors floating at their authored height.
-    if (Remaining > 0 && SnapAttempts < 10)
+    if (Unsnapped.Num() == 0)
+    {
+        return;
+    }
+
+    // Retries exist because streamed geometry can arrive after BeginPlay. With
+    // Cesium off and the city baked into the level there is nothing left to
+    // wait for, so this mostly just delays the warning — but World Partition
+    // can still be mid-load, so a few seconds of grace stays.
+    if (SnapAttempts < 10)
     {
         GetWorld()->GetTimerManager().SetTimer(
             SnapTimer, this, &ACurbsideVendorSpawner::RetrySnapToGround, 1.0f, false);
+        return;
     }
-    else if (Remaining > 0)
+
+    // Name them. A count alone gives you nothing to act on; where they are
+    // says immediately whether this is a hole in the ground, a bad
+    // georeference, or one district placed somewhere it should not be.
+    UE_LOG(LogTemp, Warning,
+        TEXT("[Curbside] %d of %d vendors never found ground after %d attempts. "
+             "They stay at their authored height."),
+        Unsnapped.Num(), Spawned.Num(), SnapAttempts);
+
+    for (const TObjectPtr<ACurbsideVendorActor>& Vendor : Unsnapped)
     {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[Curbside] %d vendors never found ground after %d attempts; check the georeference origin."),
-            Remaining, SnapAttempts);
+        if (!IsValid(Vendor.Get()))
+        {
+            continue;
+        }
+        const FVector P = Vendor->GetActorLocation();
+        UE_LOG(LogTemp, Warning, TEXT("[Curbside]   %s (%s) at x=%.0f m  y=%.0f m  z=%.1f m"),
+               *Vendor->Row.DisplayName, *Vendor->Row.District,
+               P.X / 100.0, P.Y / 100.0, P.Z / 100.0);
     }
 }
