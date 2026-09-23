@@ -19,11 +19,14 @@ Each step is independent and wrapped, so one failure does not abort the rest.
 Read the summary at the end: it lists exactly what worked and what did not.
 """
 
+import json
+import os
+
 import unreal
 
 # ---------------------------------------------------------------- configuration
 
-SCRIPT_VERSION = "2026-09-23.2"
+SCRIPT_VERSION = "2026-09-23.7"
 
 ROOT = "/Game/Curbside"
 P_BLUEPRINTS = ROOT + "/Blueprints"
@@ -298,6 +301,14 @@ def create_mapping_contexts(actions):
             mapping(A["IA_Steer"], "A", negate=True),
             mapping(A["IA_Exit"], "F"),
         ],
+        "IMC_Driving": [
+            mapping(A["IA_Throttle"], "W"),
+            mapping(A["IA_Throttle"], "S", negate=True),
+            mapping(A["IA_Steer"], "D"),
+            mapping(A["IA_Steer"], "A", negate=True),
+            mapping(A["IA_Brake"], "SpaceBar"),
+            mapping(A["IA_Exit"], "F"),
+        ],
     }
 
     made = {}
@@ -343,12 +354,59 @@ def create_vendor_blueprint():
     return bp
 
 
+# Which pawn class drives each kind of vehicle. "Foot" has no pawn: that is the
+# character. Wheeled vehicles use ACurbsideRoadVehicle, the raycast-suspension
+# car that works with a placeholder mesh; ACurbsideWheeledVehicle is the Chaos
+# one and wants a skeletal mesh with wheel bones, so it waits for art.
+CLASS_FOR_DRIVE = {
+    "Wheeled":    "CurbsideRoadVehicle",
+    "Boat":       "CurbsideBoatPawn",
+    "Helicopter": "CurbsideAircraftPawn",
+    "Plane":      "CurbsideAircraftPawn",
+}
+
+# Names from before the roster was generated. Kept so re-running updates those
+# Blueprints rather than orphaning them beside near-identical new ones.
+BP_NAME_OVERRIDES = {
+    "helicopter": "BP_Helicopter",
+    "cessna":     "BP_Plane",
+    "speedboat":  "BP_Speedboat",
+}
+
+
+def vehicle_pawn_roster():
+    """
+    (blueprint name, C++ class, spec asset, size in metres) for every vehicle.
+
+    Read from the same JSON the spec assets were generated from, so adding a
+    vehicle there is the only edit needed.
+    """
+    here = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(os.path.dirname(here), "Data", "vehicle_specs.json")
+    try:
+        with open(path, "r") as handle:
+            specs = json.load(handle)
+    except Exception as exc:
+        fail("read vehicle_specs.json", exc)
+        return []
+
+    roster = []
+    for spec in specs:
+        cls = CLASS_FOR_DRIVE.get(spec.get("Drive"))
+        if cls is None:
+            continue
+        vid = spec["VehicleId"]
+        name = BP_NAME_OVERRIDES.get(vid, "BP_" + vid[:1].upper() + vid[1:])
+        size = spec.get("SizeMeters") or [2.0, 1.5, 4.0]
+        # web [width, height, length] -> Unreal (X length, Y width, Z height)
+        roster.append((name, cls, "DA_Vehicle_" + vid,
+                       (size[2], size[0], size[1])))
+    return roster
+
+
 PAWNS = [
-    # (blueprint name, C++ class, vehicle spec asset or None)
-    ("BP_CurbsideCharacter", "CurbsideCharacter",   None),
-    ("BP_Helicopter",        "CurbsideAircraftPawn", "DA_Vehicle_helicopter"),
-    ("BP_Plane",             "CurbsideAircraftPawn", "DA_Vehicle_cessna"),
-    ("BP_Speedboat",         "CurbsideBoatPawn",     "DA_Vehicle_speedboat"),
+    # (blueprint name, C++ class, vehicle spec asset or None, hull size or None)
+    ("BP_CurbsideCharacter", "CurbsideCharacter", None, None),
 ]
 
 # Which input properties each C++ class exposes, as Python (snake_case) names.
@@ -375,7 +433,31 @@ INPUT_WIRING = {
         "steer_action": "IA_Steer",
         "exit_action": "IA_Exit",
     },
+    "CurbsideRoadVehicle": {
+        "driving_context": "IMC_Driving",
+        "throttle_action": "IA_Throttle",
+        "steer_action": "IA_Steer",
+        "brake_action": "IA_Brake",
+        "exit_action": "IA_Exit",
+    },
 }
+
+
+HULL_CLASSES = ("CurbsideAircraftPawn", "CurbsideBoatPawn", "CurbsideRoadVehicle")
+
+
+def scale_for(mesh, size_meters):
+    """Scale that makes `mesh` the given size. SM_Cube is 1 m, but ask it."""
+    unit = [100.0, 100.0, 100.0]
+    try:
+        box = mesh.get_bounding_box()
+        extent = box.max - box.min
+        for i, value in enumerate((extent.x, extent.y, extent.z)):
+            if value > 0.01:
+                unit[i] = value
+    except Exception:
+        pass
+    return [size_meters[i] * 100.0 / unit[i] for i in range(3)]
 
 
 @step
@@ -384,7 +466,7 @@ def create_pawn_blueprints(actions, contexts):
     assets.update(contexts)
     made = {}
 
-    for bp_name, cls_name, spec_name in PAWNS:
+    for bp_name, cls_name, spec_name, hull_size in PAWNS + vehicle_pawn_roster():
         parent = getattr(unreal, cls_name, None)
         if parent is None:
             fail("C++ class not found: " + cls_name)
@@ -413,12 +495,17 @@ def create_pawn_blueprints(actions, contexts):
             except Exception as exc:
                 fail("{}.{}".format(bp_name, prop), exc)
 
-        # Aircraft and boats need a visible hull and working physics.
+        # Everything but the character needs a visible hull. Scale it from the
+        # spec so a bus is bus-sized and a jetski is not: with one cube for
+        # every vehicle, size is the only thing telling them apart.
         cube = load(PLACEHOLDER_CUBE)
-        if cube and cls_name in ("CurbsideAircraftPawn", "CurbsideBoatPawn"):
-            hull = cdo.get_editor_property("hull")
-            hull.set_static_mesh(cube)
-            hull.set_relative_scale3d(unreal.Vector(2.0, 1.0, 0.8))
+        if cube and hull_size and cls_name in HULL_CLASSES:
+            try:
+                hull = cdo.get_editor_property("hull")
+                hull.set_static_mesh(cube)
+                hull.set_relative_scale3d(unreal.Vector(*scale_for(cube, hull_size)))
+            except Exception as exc:
+                fail("{} hull".format(bp_name), exc)
 
         save(bp)
         made[bp_name] = bp

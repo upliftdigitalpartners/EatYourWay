@@ -255,6 +255,39 @@ rather than 4,352 actors, which also matters on a phone.
 The chunks collide (`BlockAll`), which is what gives the vendor spawner's ground
 trace something to land on.
 
+## 6c. Put the vehicles in it
+
+Re-run `setup_curbside.py` (it now builds a Blueprint per vehicle), then:
+
+**Tools > Execute Python Script…** → `unreal/Tools/place_vehicles.py`
+
+Each vehicle goes somewhere it makes sense: cars and bikes along the roads
+nearest the PlayerStart, boats on Flushing Bay, the two planes on the LaGuardia
+runways, the helicopter parked with the cars so you don't have to walk to the
+airport. The positions come out of `world_instances.json`, so moving a runway in
+the generator moves the aircraft with it. Re-running replaces what it placed.
+
+### The car problem, and the way round it
+
+`ACurbsideWheeledVehicle` is the Chaos car and it is the better one — real
+suspension, real tyre model. It also needs a skeletal mesh with wheel bones and
+a physics asset, which is art, and there isn't any yet. So a cube cannot be a
+Chaos car, and "drive around Queens" was blocked on a modelling job.
+
+`ACurbsideRoadVehicle` is the way round it: a static-mesh hull on four raycast
+springs, ported from `src/vehicles/controller.ts` where the handling was tuned
+against Rapier's `DynamicRayCastVehicleController`. Four line traces per tick
+for the springs and lateral grip, a forward force for the engine, a yaw torque
+for the steering. It drives with a cube for a body.
+
+Both implement `ICurbsideDriveable` and read the same `UCurbsideVehicleSpec`, so
+when the art arrives, swapping one for the other is a change to which class the
+Blueprint reparents to and nothing else.
+
+`UCurbsideVehicleSpec::SizeMeters` carries the body size, so the placeholder
+hulls scale themselves: a bus is 12 m long and a jetski is 3 m, which with one
+cube per vehicle is the only thing telling them apart.
+
 ## 7. How the rules work
 
 `UCurbsideRunComponent` (on the PlayerState, so it survives pawn swaps) owns one
@@ -278,6 +311,8 @@ Call `Order(Vendor.Row, Item, OutFlavor)` from your order widget; bind
   on-screen controls; `src/ui/` in the web build has a tested layout to
   reference, though the code doesn't port.
 - **No AI traffic.** Vehicles are parked props until entered.
+- **Cars are cubes.** `ACurbsideRoadVehicle` drives properly but has no
+  model, and no wheels that turn — the wheels are raycasts, not meshes.
 - **No water volume.** Boats float against `Spec->WaterLevelZ`, a flat plane.
 - **Enter/exit is teleport-based.** No animation.
 - **Fixed-wing needs a flat runway.** `TakeoffRollMeters` gates rotation

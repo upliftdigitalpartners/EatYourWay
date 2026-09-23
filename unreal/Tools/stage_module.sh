@@ -10,8 +10,9 @@
 # By default the Chaos wheeled vehicle is LEFT OUT. It is the only file that
 # needs the ChaosVehicles module, and Chaos APIs drift between engine versions,
 # so omitting it removes the likeliest cause of a failed first build. Everything
-# else — the run rules, vendors, character, aircraft and boat — still compiles
-# and is playable. Re-run with --with-chaos once that build is green.
+# else still compiles and is playable — including cars, since
+# CurbsideRoadVehicle does its own raycast suspension and needs no Chaos.
+# Re-run with --with-chaos once that build is green.
 
 set -euo pipefail
 

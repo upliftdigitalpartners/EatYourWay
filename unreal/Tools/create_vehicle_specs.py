@@ -93,6 +93,13 @@ def run():
         asset.set_editor_property("domain", DOMAIN[spec["Domain"]])
         asset.set_editor_property("drive", DRIVE[spec["Drive"]])
 
+        # The web build stores size as [width, height, length]; Unreal wants
+        # X forward, Y right, Z up. A sedan is 4.6 long, not 4.6 wide.
+        size = spec.get("SizeMeters")
+        if size and len(size) == 3:
+            asset.set_editor_property(
+                "size_meters", unreal.Vector(size[2], size[0], size[1]))
+
         unreal.EditorAssetLibrary.save_loaded_asset(asset)
         made += 1
 

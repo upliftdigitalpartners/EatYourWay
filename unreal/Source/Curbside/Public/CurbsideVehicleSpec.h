@@ -53,6 +53,13 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Curbside|Seats")
     int32 Seats = 4;
 
+    /** Body size in metres, in Unreal's axis order: X length, Y width, Z height.
+     *  The web build stores this as width/height/length; the exporter reorders
+     *  it. Placeholder hulls are scaled from this, so a bus is bus-sized
+     *  without anyone authoring a mesh. */
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Curbside")
+    FVector SizeMeters = FVector(4.6f, 1.85f, 1.45f);
+
     // ---- air ---------------------------------------------------------------
 
     /** Available vertical thrust as a multiple of gravity. Helicopters only. */
