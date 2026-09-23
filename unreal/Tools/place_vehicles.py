@@ -21,7 +21,7 @@ import math
 import os
 import unreal
 
-SCRIPT_VERSION = "2026-09-23.9"
+SCRIPT_VERSION = "2026-09-23.10"
 
 BLUEPRINTS = "/Game/Curbside/Blueprints"
 LABEL_PREFIX = "Curbside_Vehicle_"
@@ -182,20 +182,27 @@ def runway_slots(world):
     return out
 
 
-def water_slots(world, wanted):
+def water_slots(world, origin, wanted):
     """
-    Moorings out in the bay.
+    Moorings, on the nearest stretch of water to the player.
 
-    The water tiles are a grid; taking every Nth one spreads the boats out
-    instead of rafting them together on the first tile in the list.
+    The map has two bodies of water four kilometres apart, so picking tiles
+    straight off the list put one boat in Flushing Bay and another off the far
+    west edge. Sort by distance first, then spread across the nearest quarter:
+    close enough to walk to, far enough apart not to spawn inside each other.
     """
     tiles = world.get("water", [])
     if not tiles or wanted <= 0:
         return []
-    step = max(1, len(tiles) // (wanted + 1))
+
+    def distance(tile):
+        return math.hypot(tile["l"][0] - origin[0], tile["l"][1] - origin[1])
+
+    near = sorted(tiles, key=distance)[:max(wanted, len(tiles) // 4)]
+    step = max(1, len(near) // (wanted + 1))
     out = []
     for i in range(wanted):
-        tile = tiles[min(len(tiles) - 1, (i + 1) * step)]
+        tile = near[min(len(near) - 1, (i + 1) * step)]
         x, y, _z = tile["l"]
         # Boats float against Spec->WaterLevelZ; the surface is Z = 0.
         out.append(((x, y, 0.0), (i * 37) % 360))
@@ -259,7 +266,7 @@ def build():
     road = [n for n in names if n not in runway + apron + water]
 
     runways = runway_slots(world)
-    waters = water_slots(world, len(water))
+    waters = water_slots(world, origin, len(water))
     roads = road_slots(world, origin, len(road) + len(apron))
 
     placed = 0
