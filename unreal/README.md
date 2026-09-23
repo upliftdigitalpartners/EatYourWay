@@ -216,6 +216,26 @@ count it reads back off the components, so the log says what actually landed
 rather than what it tried to place. Re-running replaces the previous chunks.
 Save the level afterwards.
 
+### Then dress it
+
+**Tools > Execute Python Script…** → `unreal/Tools/dress_world.py`
+
+Geometry alone is a quarry, not a city. This adds the part that makes it read:
+
+- **Lighting** — a movable sun low in the west, a real-time sky light,
+  volumetric fog and a locked exposure. Movable throughout, because the city is
+  generated and there is no baked lighting to generate it against.
+- **`M_CurbsideBuilding`** — procedural windows on a world-space grid (so a
+  tower and a row house get the same size windows), masked off roofs by the
+  vertex normal, with wall colour lerped per building.
+- **Per-instance custom data** — two floats per building, derived from its own
+  position so the colours are the same every run. Index 0 tints the wall, index
+  1 lights the windows; about a fifth of the city has its lights on.
+
+No rebuild for this one: unlike adding a component, all of it is already exposed
+to Python. Re-running `build_world.py` rebuilds the chunks and drops the custom
+data, so run `dress_world.py` again after it.
+
 ### Why this needs C++
 
 Unreal's Python API has no `AddComponentByClass` — you cannot add a component to
