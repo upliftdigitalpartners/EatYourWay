@@ -339,12 +339,44 @@ crawl:
 Call `Order(Vendor.Row, Item, OutFlavor)` from your order widget; bind
 `OnRunEnded`, `OnAte`, `OnDistrictUnlocked` for UI.
 
-## 8. Known gaps
+## 8. Android
+
+Nothing here is shared with `mobile/` at the top of this repo. That is the
+older Expo build — a different game, a different engine, and its own APK. This
+packages as a second app that sits beside it.
+
+```bash
+# once, with the editor closed
+./unreal/Tools/package_android.sh --install
+```
+
+That applies `unreal/Config/Android.ini` to the project's `DefaultEngine.ini`,
+packages a Development APK, and pushes it over USB. The first run compiles every
+shader again for the phone's GPU and takes the better part of an hour; later
+runs are minutes.
+
+**Touch controls.** `ACurbsidePlayerController` reads the touchscreen and
+*injects* values for the ordinary input actions (`IA_Move`, `IA_Throttle`, …),
+so no pawn knows or cares that it is being driven by a thumb. A pawn written
+later gets touch support for free as long as it binds the usual actions.
+`ACurbsideHUD` draws the stick and buttons; `FCurbsideTouchLayout` is the one
+place that decides where they are, so drawing and hit-testing cannot drift
+apart.
+
+Left thumb steers, right half of the screen turns the camera, four buttons
+bottom-right. The two middle ones change meaning with the pawn — jump and sprint
+on foot, climb and brake in a vehicle — and are labelled with whatever they
+currently do.
+
+To try them without packaging: `curbside.Touch 1` in the console during Play.
+`bUseMouseForTouch` is on, so the mouse acts as a finger.
+
+## 9. Known gaps
 
 - **Handling is untuned.** See the status note above.
-- **No touch controls.** Input is keyboard-shaped. For Android you need
-  on-screen controls; `src/ui/` in the web build has a tested layout to
-  reference, though the code doesn't port.
+- **Touch controls are untested on a real phone.** They are written (see §9)
+  and they work against the mouse in the editor, but nobody has held the
+  packaged build yet.
 - **The HUD is programmer art.** Flat rectangles and the engine font. It
   reports everything correctly; it is not styled.
 - **No AI traffic.** Vehicles are parked props until entered.

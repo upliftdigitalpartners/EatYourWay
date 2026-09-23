@@ -80,6 +80,9 @@ private:
 
     void DrawStats(UCurbsideRunComponent* Run, float S);
     void DrawPrompt(float S);
+
+    /** The thumbstick and buttons, on a phone. Nothing on a desktop. */
+    void DrawTouchControls(float S);
     void DrawMenu(UCurbsideRunComponent* Run, float S);
     void DrawToast(float S);
     void DrawSummary(float S);

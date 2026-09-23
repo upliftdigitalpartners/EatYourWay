@@ -26,7 +26,7 @@ import unreal
 
 # ---------------------------------------------------------------- configuration
 
-SCRIPT_VERSION = "2026-09-23.12"
+SCRIPT_VERSION = "2026-09-23.13"
 
 ROOT = "/Game/Curbside"
 P_BLUEPRINTS = ROOT + "/Blueprints"
@@ -569,6 +569,14 @@ def create_game_mode(pawns):
         cdo.set_editor_property("hud_class", hud)
     else:
         fail("CurbsideHUD not found — rebuild the module")
+
+    # The touch controls live on the player controller. On a desktop it behaves
+    # exactly like the default one, so this is safe to set either way.
+    pc = getattr(unreal, "CurbsidePlayerController", None)
+    if pc is not None:
+        cdo.set_editor_property("player_controller_class", pc)
+    else:
+        fail("CurbsidePlayerController not found — rebuild the module")
 
     character = pawns.get("BP_CurbsideCharacter")
     if character:

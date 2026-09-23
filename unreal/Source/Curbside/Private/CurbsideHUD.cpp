@@ -1,8 +1,10 @@
 #include "CurbsideHUD.h"
 
+#include "CurbsidePlayerController.h"
 #include "CurbsideRunComponent.h"
 #include "CurbsideVendorActor.h"
 #include "Engine/Canvas.h"
+#include "GameFramework/Character.h"
 #include "Engine/Engine.h"
 #include "Engine/Font.h"
 #include "Engine/World.h"
@@ -188,9 +190,69 @@ void ACurbsideHUD::DrawHUD()
     }
 
     DrawStats(Run, S);
+    DrawTouchControls(S);
     DrawMenu(Run, S);
     DrawPrompt(S);
     DrawToast(S);
+}
+
+void ACurbsideHUD::DrawTouchControls(float S)
+{
+    ACurbsidePlayerController* PC = Cast<ACurbsidePlayerController>(GetOwningPlayerController());
+    if (PC == nullptr || !PC->UseTouchControls())
+    {
+        return;
+    }
+
+    const FCurbsideTouchLayout L = FCurbsideTouchLayout::Build(
+        static_cast<float>(Canvas->SizeX), static_cast<float>(Canvas->SizeY));
+    UFont* Font = GEngine ? GEngine->GetMediumFont() : nullptr;
+
+    // Faint enough to play behind, solid enough to find without looking.
+    const FLinearColor Ring(1.0f, 1.0f, 1.0f, 0.13f);
+    const FLinearColor Thumb(1.0f, 1.0f, 1.0f, 0.30f);
+    const FLinearColor Face(0.02f, 0.02f, 0.03f, 0.42f);
+    const FLinearColor Lit(AccentColour.R, AccentColour.G, AccentColour.B, 0.55f);
+
+    // ---- the stick ----
+    Canvas->K2_DrawPolygon(nullptr, L.StickCentre, FVector2D(L.StickRadius, L.StickRadius),
+                           32, Ring);
+    Canvas->K2_DrawPolygon(nullptr, L.StickCentre + PC->GetTouchStickOffset(),
+                           FVector2D(L.StickRadius * 0.42f, L.StickRadius * 0.42f), 32, Thumb);
+
+    // ---- the buttons ----
+    // Labelled by what they do here and now. The same two buttons are jump and
+    // brake on the ground and climb and descend in the air, and a button whose
+    // label lies is worse than no label.
+    const APawn* Pawn = PC->GetPawn();
+    const bool bOnFoot = Pawn == nullptr || Pawn->IsA(ACharacter::StaticClass());
+
+    auto Button = [&](const FVector2D& Centre, ECurbsideTouchGrab Which, const TCHAR* Label)
+    {
+        const bool bHeld = PC->IsTouchHeld(Which);
+        Canvas->K2_DrawPolygon(nullptr, Centre, FVector2D(L.ButtonRadius, L.ButtonRadius),
+                               28, bHeld ? Lit : Face);
+        Canvas->K2_DrawPolygon(nullptr, Centre,
+                               FVector2D(L.ButtonRadius * 0.94f, L.ButtonRadius * 0.94f),
+                               28, bHeld ? Lit : FLinearColor(0.0f, 0.0f, 0.0f, 0.30f));
+
+        const FString Text(Label);
+        float TW = 0.0f;
+        float TH = 0.0f;
+        GetTextSize(Text, TW, TH, Font, S * 0.75f);
+        DrawText(Text, TextColour,
+                 static_cast<float>(Centre.X) - TW * 0.5f,
+                 static_cast<float>(Centre.Y) - TH * 0.5f,
+                 Font, S * 0.75f, false);
+    };
+
+    Button(L.Action, ECurbsideTouchGrab::Action, IsMenuOpen() ? TEXT("ORDER") : TEXT("USE"));
+    Button(L.Jump,  ECurbsideTouchGrab::Jump,  bOnFoot ? TEXT("JUMP") : TEXT("UP"));
+    Button(L.Brake, ECurbsideTouchGrab::Brake, bOnFoot ? TEXT("RUN")  : TEXT("BRAKE"));
+    if (!bOnFoot)
+    {
+        Button(L.Exit, ECurbsideTouchGrab::Exit, TEXT("OUT"));
+    }
 }
 
 void ACurbsideHUD::DrawStats(UCurbsideRunComponent* Run, float S)
@@ -241,6 +303,14 @@ void ACurbsideHUD::DrawPrompt(float S)
     // The character owns what is in range; it pushes the text over by opening
     // the menu, so all that is left here is the standing hint.
     UFont* Font = GEngine ? GEngine->GetMediumFont() : nullptr;
+
+    const ACurbsidePlayerController* PC =
+        Cast<ACurbsidePlayerController>(GetOwningPlayerController());
+    if (PC != nullptr && PC->UseTouchControls())
+    {
+        return;  // the buttons are labelled; a keyboard hint would be a lie
+    }
+
     const FString Hint = TEXT("F  order / get in        A D  browse        S  leave menu");
 
     const float Y = Canvas->SizeY - 46.0f * S;
