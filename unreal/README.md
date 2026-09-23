@@ -296,6 +296,33 @@ Blueprint reparents to and nothing else.
 hulls scale themselves: a bus is 12 m long and a jetski is 3 m, which with one
 cube per vehicle is the only thing telling them apart.
 
+## 6d. The HUD and the order menu
+
+Nothing further to run — `setup_curbside.py` points the GameMode at
+`ACurbsideHUD`, and it draws itself.
+
+- **Top left** — cash, clock, hunger and coma bars, flavour and the live
+  multiplier with the cuisine and district counts feeding it.
+- **F at a vendor** opens their menu; **A/D** browse, **F** buys, **S** leaves.
+  Items you cannot afford are greyed rather than hidden, so the prices still
+  tell you what to save for.
+- **Toasts** for each bite, hidden gems, combo steps and district unlocks.
+- **A summary panel** when the run ends: rank, flavour, bites, gems, spend,
+  cuisines, districts.
+
+### Why a Canvas HUD and not UMG
+
+UMG looks better, but its layout is authored by hand in the widget designer,
+and this had to exist before anyone could tell whether the game worked at all.
+The Canvas HUD is one file, needs no assets, and renders the same on a phone as
+on the desktop. Swapping it for UMG later is a change to the GameMode's
+`HUDClass` and nothing else — `ACurbsideCharacter` still broadcasts
+`OnOrderRequested`, so a UMG menu can take over by listening to it.
+
+The menu deliberately has no input actions of its own: with it open the walk
+keys drive it instead. Fewer assets to create, fewer mappings to get wrong, and
+it works on a phone's left stick without any extra buttons.
+
 ## 7. How the rules work
 
 `UCurbsideRunComponent` (on the PlayerState, so it survives pawn swaps) owns one
@@ -318,6 +345,8 @@ Call `Order(Vendor.Row, Item, OutFlavor)` from your order widget; bind
 - **No touch controls.** Input is keyboard-shaped. For Android you need
   on-screen controls; `src/ui/` in the web build has a tested layout to
   reference, though the code doesn't port.
+- **The HUD is programmer art.** Flat rectangles and the engine font. It
+  reports everything correctly; it is not styled.
 - **No AI traffic.** Vehicles are parked props until entered.
 - **Cars are cubes.** `ACurbsideRoadVehicle` drives properly but has no
   model, and no wheels that turn — the wheels are raycasts, not meshes.

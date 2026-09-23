@@ -26,7 +26,7 @@ import unreal
 
 # ---------------------------------------------------------------- configuration
 
-SCRIPT_VERSION = "2026-09-23.7"
+SCRIPT_VERSION = "2026-09-23.11"
 
 ROOT = "/Game/Curbside"
 P_BLUEPRINTS = ROOT + "/Blueprints"
@@ -523,6 +523,14 @@ def create_game_mode(pawns):
 
     cdo = cdo_of(bp)
     cdo.set_editor_property("player_state_class", unreal.CurbsidePlayerState)
+
+    # The Canvas HUD. Without this the crawl runs but nothing is on screen:
+    # no money, no clock, and no way to order anything.
+    hud = getattr(unreal, "CurbsideHUD", None)
+    if hud is not None:
+        cdo.set_editor_property("hud_class", hud)
+    else:
+        fail("CurbsideHUD not found — rebuild the module")
 
     character = pawns.get("BP_CurbsideCharacter")
     if character:

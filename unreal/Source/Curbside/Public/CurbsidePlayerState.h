@@ -20,6 +20,7 @@ class CURBSIDE_API ACurbsidePlayerState : public APlayerState
 public:
     ACurbsidePlayerState();
 
+    virtual void BeginPlay() override;
     virtual void Tick(float DeltaSeconds) override;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Curbside")

@@ -8,6 +8,18 @@ ACurbsidePlayerState::ACurbsidePlayerState()
     Run = CreateDefaultSubobject<UCurbsideRunComponent>(TEXT("Run"));
 }
 
+void ACurbsidePlayerState::BeginPlay()
+{
+    Super::BeginPlay();
+
+    // Nothing else was starting it, so the clock never ran and every Order()
+    // was refused for an inactive run. The crawl begins when the player does.
+    if (Run)
+    {
+        Run->StartRun();
+    }
+}
+
 void ACurbsidePlayerState::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);

@@ -12,6 +12,7 @@
 #include "CurbsideTypes.h"
 #include "CurbsideCharacter.generated.h"
 
+class ACurbsideHUD;
 class ACurbsideVendorActor;
 class UCameraComponent;
 class UCurbsideRunComponent;
@@ -90,6 +91,10 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Curbside")
     bool EnterVehicle(APawn* Vehicle);
 
+    /** The Canvas HUD, if the GameMode is using one. Null is fine everywhere. */
+    UFUNCTION(BlueprintPure, Category = "Curbside")
+    ACurbsideHUD* GetCurbsideHUD() const;
+
     UFUNCTION(BlueprintCallable, Category = "Curbside")
     void ExitVehicle(APawn* Vehicle);
 
@@ -116,6 +121,13 @@ protected:
     void HandleSprintStart(const FInputActionValue& Value);
     void HandleSprintStop(const FInputActionValue& Value);
     void HandleInteract(const FInputActionValue& Value);
+
+    /** Browse and dismiss the order menu with the walk keys, so the menu needs
+     *  no input actions of its own. */
+    void DriveMenu(ACurbsideHUD* HUD, const FVector2D& Axis);
+
+    /** Last frame's move axis, for edge-detecting a keypress out of an axis. */
+    FVector2D MenuAxis = FVector2D::ZeroVector;
 
     /** Refresh VendorInRange / VehicleInRange and reveal hidden vendors. */
     void ScanForInteractables();

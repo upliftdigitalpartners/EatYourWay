@@ -2,6 +2,7 @@
 
 #include "Camera/CameraComponent.h"
 #include "CurbsideDriveable.h"
+#include "CurbsideHUD.h"
 #include "CurbsideRunComponent.h"
 #include "CurbsideVendorActor.h"
 #include "EnhancedInputComponent.h"
@@ -72,6 +73,7 @@ void ACurbsideCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
     if (MoveAction)
     {
         Input->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ACurbsideCharacter::HandleMove);
+        Input->BindAction(MoveAction, ETriggerEvent::Completed, this, &ACurbsideCharacter::HandleMove);
     }
     if (LookAction)
     {
@@ -96,6 +98,19 @@ void ACurbsideCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 void ACurbsideCharacter::HandleMove(const FInputActionValue& Value)
 {
     const FVector2D Axis = Value.Get<FVector2D>();
+
+    // With a menu up the walk keys drive the menu instead. Reusing them means
+    // ordering needs no input actions or mappings of its own.
+    if (ACurbsideHUD* HUD = GetCurbsideHUD())
+    {
+        if (HUD->IsMenuOpen())
+        {
+            DriveMenu(HUD, Axis);
+            return;
+        }
+    }
+    MenuAxis = FVector2D::ZeroVector;
+
     if (!Controller || Axis.IsNearlyZero())
     {
         return;
@@ -129,9 +144,23 @@ void ACurbsideCharacter::HandleSprintStop(const FInputActionValue& /*Value*/)
 
 void ACurbsideCharacter::HandleInteract(const FInputActionValue& /*Value*/)
 {
+    ACurbsideHUD* HUD = GetCurbsideHUD();
+
+    // With the menu up, F buys the highlighted item rather than reopening it.
+    if (HUD && HUD->IsMenuOpen())
+    {
+        HUD->ConfirmOrder();
+        return;
+    }
+
     // A vendor you are standing at beats a car you are standing next to.
     if (VendorInRange)
     {
+        if (HUD)
+        {
+            HUD->OpenMenu(VendorInRange);
+        }
+        // Still broadcast, so a Blueprint or UMG menu can replace the HUD's.
         OnOrderRequested.Broadcast(VendorInRange);
         return;
     }
@@ -139,6 +168,32 @@ void ACurbsideCharacter::HandleInteract(const FInputActionValue& /*Value*/)
     {
         EnterVehicle(VehicleInRange);
     }
+}
+
+ACurbsideHUD* ACurbsideCharacter::GetCurbsideHUD() const
+{
+    const APlayerController* PC = Cast<APlayerController>(GetController());
+    return PC ? Cast<ACurbsideHUD>(PC->GetHUD()) : nullptr;
+}
+
+void ACurbsideCharacter::DriveMenu(ACurbsideHUD* HUD, const FVector2D& Axis)
+{
+    // Edge detection: these are axes, but the menu wants keypresses.
+    if (Axis.X > 0.5f && MenuAxis.X <= 0.5f)
+    {
+        HUD->CycleMenu(1);
+    }
+    else if (Axis.X < -0.5f && MenuAxis.X >= -0.5f)
+    {
+        HUD->CycleMenu(-1);
+    }
+
+    if (Axis.Y < -0.5f && MenuAxis.Y >= -0.5f)
+    {
+        HUD->CloseMenu();
+    }
+
+    MenuAxis = Axis;
 }
 
 bool ACurbsideCharacter::EnterVehicle(APawn* Vehicle)
